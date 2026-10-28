@@ -1,111 +1,216 @@
-[![CI](https://github.com/Alanaktion/phproject/workflows/CI/badge.svg)](https://github.com/Alanaktion/phproject/actions?query=workflow%3ACI)
-[![Crowdin](https://badges.crowdin.net/phproject/localized.svg)](https://crowdin.com/project/phproject)
+# Agile CodeBoard
 
-# Phproject
+**A project-management platform with a predictive, prescriptive and explainable intelligence layer.**
 
-*A high-performance project management system in PHP*
+Agile CodeBoard is built on [Phproject](https://github.com/Alanaktion/phproject) (PHP / Fat-Free Framework) and adds a Python/FastAPI intelligence sidecar. The PHP application remains the system of record and owns authentication, access control and workflow. The ML service owns risk, forecasting, assignment optimization, duplicate detection and the grounded assistant.
 
-## Installation
+**Runtime:** PHP **8.5.12** (latest security release) · MySQL 8 or SQLite · Python 3.12 · Docker Compose
 
-Download and extract [the latest release](https://github.com/Alanaktion/phproject/releases/latest) a web accessible directory, go to the page in a browser, and fill in your database connection details.
+---
 
-Detailed requirements and installation instructions are available at [phproject.org](http://www.phproject.org/install.html).
+## Highlights
 
-## Project intelligence layer
+| Area | What it does |
+|---|---|
+| **Calibrated risk** | Predicts the probability that each open task finishes late, with per-issue explanations and model calibration metrics. |
+| **Sprint forecasting** | Monte Carlo simulation over historical cycle times, dependencies and assignee capacity, with P50/P85/P95 dates and risk drivers. |
+| **What-if planning** | Re-run a forecast with extra days or reduced/increased capacity before committing to a plan. |
+| **Prescriptive assignment** | Ranks assignees, then solves the sprint as a CP-SAT assignment problem with capacity, WIP and fairness constraints. Review and apply changes in one action. |
+| **Command center** | One page for sprint confidence, risk distribution, workload, model health, engineering activity and recent work. |
+| **Sprint timeline** | Risk-colored Gantt-style bars with owners, hours, dependency counts and a today marker. |
+| **Duplicate detection** | TF-IDF similarity over issue titles/descriptions, shown on issues and while drafting a new task. |
+| **Grounded assistant** | Ask about forecast, risk, workload, assignments or duplicates; answers cite the project data they used. No external LLM key required. |
+| **Notifications** | In-app notifications for watchers, owners and authors, with unread badges and mark-all-read. |
+| **GitHub integration** | Signed webhooks link commits and pull requests to issues and store DORA-ready events. |
+| **Evaluation** | Walk-forward backtesting, reliability curves, Brier score, ECE, precision@10% and a model registry. |
+| **Feedback loop** | Every suggestion impression and acceptance is recorded so acceptance and realized lift can be measured. |
 
-This fork adds a Python/FastAPI sidecar with task late-risk prediction, sprint
-delivery forecasting, assignee recommendations, model quality metrics and an
-analytics bridge. The PHP application calls it over HTTP; it never shells out.
+---
+
+## Screenshots
+
+### Project command center
+
+![Project command center](docs/screenshots/command-center.png)
+
+### Task board with calibrated risk badges
+
+![Task board](docs/screenshots/taskboard.png)
+
+### Sprint timeline
+
+![Sprint timeline](docs/screenshots/timeline.png)
+
+### Model quality
+
+![Model quality](docs/screenshots/model-quality.png)
+
+### Notifications
+
+![Notifications](docs/screenshots/notifications.png)
+
+### Issue page with linked work and duplicate detection
+
+![Issue page](docs/screenshots/issue.png)
+
+---
+
+## Architecture
+
+```text
+Browser (Fat-Free views + vanilla JS + Chart.js)
+   │
+   ├── PHP application ──────────────► MySQL 8 / SQLite
+   │      │
+   │      ├── HTTP (internal token) ─► FastAPI ML service
+   │      │                                ├── calibrated risk model
+   │      │                                ├── Monte Carlo forecast
+   │      │                                ├── CP-SAT assignment optimizer
+   │      │                                ├── TF-IDF similarity search
+   │      │                                └── grounded assistant
+   │      │
+   │      ├── GitHub webhooks ─────────► issue links + DORA events
+   │      └── notifications / issue history
+   │
+   └── Optional profiles: Redis, Mercure, Qdrant, MailHog
+```
+
+The PHP app never shells out to Python. `Helper\Ml` calls the sidecar over HTTP with a timeout, an internal token and graceful fallback.
+
+---
+
+## Quick start
 
 ```bash
 cp .env.example .env
 docker compose up -d --build
 docker compose exec app php cron/seed_demo.php
-# http://localhost:9090 — demo_alice / demo1234
 ```
 
-See [docs/intelligence-layer.md](docs/intelligence-layer.md) for endpoints,
-architecture, migrations and development commands.
+Open **http://localhost:9090**.
 
-## Development
+| Account | Password | Role |
+|---|---|---|
+| `admin` | `change-me-now` (`ADMIN_PASSWORD` in `.env`) | Admin |
+| `demo_alice` | `demo1234` | User |
+| `demo_bob` | `demo1234` | User |
+| `demo_carol` | `demo1234` | User |
+| `demo_dave` | `demo1234` | User |
 
-Phproject uses [Composer](https://getcomposer.org/) for dependency management. After cloning the repository, run `composer install` to install the required packages.
+The seed creates 5 users, 3 projects, 14 sprints, 360 closed tasks with realistic lateness profiles, current-sprint work, tags, dependencies and activation history.
 
-## Contributing
+Useful commands:
 
-Phproject is maintained as an open source project for use by anyone around the world under the [GNU General Public License](http://www.gnu.org/licenses/gpl-3.0.txt). If you find a bug or would like a new feature added, [open an issue](https://github.com/Alanaktion/phproject/issues/new) or [submit a pull request](https://github.com/Alanaktion/phproject/compare/) with new code. If you want to help with translation, [you can submit translations via Crowdin](https://crowdin.com/project/phproject).
+```bash
+make migrate     # apply DB migrations
+make seed        # deterministic demo data
+make train       # recompute analytics through the ML service
+make test        # PHP + Python tests
+make lint        # phpcs + phpstan + ruff
+make forecast    # forecast the current sprint
+```
 
 ---
 
-## Changelog
+## Feature changelog — added in this session
 
-### Project Intelligence Layer — Added by Vedant Chalke
+### 1. Platform foundation
 
-This fork turns Phproject into **Agile CodeBoard**, a project-management platform with a predictive, prescriptive and explainable intelligence layer. PHP remains the system of record and owns authentication, access control and workflow. A Python/FastAPI sidecar owns models, forecasting and optimization; the PHP application calls it over HTTP and never shells out to Python.
+- Added a FastAPI inference service under `ml-service/` with health, version and metrics endpoints, internal-token authentication and OpenAPI docs.
+- Added a SQLAlchemy data layer that reads the same `config.php` as PHP and supports **MySQL and SQLite**.
+- Replaced the PHP `exec()` bridge with `Helper\Ml`, an HTTP client with timeouts, error handling and a fallback path.
+- Added a model registry (`model_run`) with version, row count, metrics, dataset hash and active flag.
+- Added Docker Compose services for the app, MySQL, ML service, Redis, Mercure, Qdrant and MailHog, with health checks and dev profiles.
+- Added multi-stage Docker images, a PHP 8.5.12 runtime, a one-command installer entrypoint and persistent config storage.
+- Added dual-dialect migrations (`db/26.10.*.sql` and `.sqlite.sql`) and an engine-aware migration runner.
+- Added GitHub Actions for PHP 8.5 (MySQL + SQLite), Python lint/pytest and Docker image builds.
 
-#### Predictive intelligence
+### 2. Predictive intelligence
 
-- **Calibrated task late-risk model** — logistic regression trained on the audit-backed task history (`issue`, `issue_update`, `issue_update_field`, `issue_tag`), with expanding-window validation and sigmoid calibration.
-- **Time-aware features** — planned hours, priority, bug flag, allowed window, queue time, pressure, activation day, owner trailing late rate (shrunk toward the team rate) and owner load. Features are computed only from information available when a task starts.
-- **Model quality metrics** — ROC AUC, Brier score, expected calibration error (ECE), precision at the top 10%, reliability-curve data and per-fold results.
-- **Walk-forward backtesting** — trains on the past and tests on the next time block; reports per-fold and weighted aggregate metrics instead of a random split.
-- **Cycle-time estimates** — empirical P50/P85/P95 from activation-to-close history, used by forecasts and the issue form.
-- **Model registry** — every trained risk model is recorded in `model_run` with version, row count, metrics, dataset hash and active flag.
-- **Per-issue explanations** — the top contributing features and direction for every risk prediction.
+- **Calibrated late-risk model** trained on issue history and audit fields, with time-aware features (planned hours, priority, bug flag, window, queue time, pressure, owner trailing late rate, owner load).
+- **Per-issue explanations** with the top contributing features and direction.
+- **Cycle-time estimates** (P50/P85/P95) from activation-to-close history.
+- **Model quality metrics**: ROC AUC, Brier score, expected calibration error, precision at the top 10%, reliability bins and per-fold results.
+- **Walk-forward backtesting** (`/v1/models/risk/backtest`) with weighted fold summaries.
+- **Model registry** and `/intelligence/quality` admin page.
+- **Batch risk** endpoint powering task-board and issue-list badges.
 
-#### Prescriptive intelligence
+### 3. Prescriptive intelligence
 
-- **Monte Carlo sprint forecasting** — samples historical cycle times, respects `issue_dependency` ordering, queues work per assignee, applies capacity and returns the probability of finishing on time plus P50/P85/P95 dates.
-- **Risk drivers** — shows which tasks are most often the last to finish across simulations, with criticality scores and median finish dates.
-- **Reproducible forecasts** — fixed seed and explicit assumptions (simulation count, historical samples, dependency handling, capacity, data source) returned with every forecast.
-- **What-if scenarios** — re-run a forecast with extra days, reduced or increased capacity, or both, directly from the forecast modal; the scenario is echoed back in the assumptions.
-- **Assignee recommendations** — ranks the team for an existing issue, an entire sprint or a draft task using trailing on-time rate, current open hours, tag overlap, historical sample size and capacity fit.
-- **Prescriptive sprint optimizer** — OR-Tools CP-SAT assignment with one owner per task, per-person capacity, WIP limits and a configurable fairness cap; falls back to a deterministic greedy solver when CP-SAT is unavailable.
-- **Baseline and lift** — compares the optimizer's expected fit against the current assignment, reports changed owners, projected hours, utilization per person and the fairness cap used.
-- **Apply reviewed assignments** — managers and admins can apply the optimizer's changes in one action; every change uses `Model\Issue::save()`, so the normal issue history and audit trail still fire, and each applied run is recorded in `assignment_run`/`assignment_item`.
-- **Optimizer preview UI** — a sprint-board modal shows the solver, fit/lift, fairness state, per-user load, every proposed owner change and an apply-all action for managers.
+- **Monte Carlo sprint forecasting** with dependency ordering, per-assignee queues, capacity, historical cycle-time sampling, fixed seed and explicit assumptions.
+- **Risk drivers** showing which tasks are critical most often.
+- **What-if scenarios** for extra days and capacity changes.
+- **Assignee recommendations** for issues, sprints and draft tasks using on-time history, current load, tag overlap and capacity fit.
+- **CP-SAT sprint optimizer** with one owner per task, capacity, WIP and a fairness cap; deterministic greedy fallback.
+- **Baseline vs optimizer** comparison: expected fit, lift, changed owners, per-user projected hours and utilization.
+- **Apply reviewed assignments** with manager/admin permission, issue-history logging and `assignment_run`/`assignment_item` audit rows.
 
-#### Feedback, trust and evaluation
+### 4. Command center, timeline and assistant
 
-- **Suggestion feedback loop** — `suggestion_log` records shown, accepted, rejected, overridden and ignored suggestions with the model payload and acting user, so acceptance and realized lift can be measured later.
-- **Model quality page** — an admin view with AUC, Brier, ECE, precision@10%, walk-forward folds, reliability bins and active model versions.
-- **Explainable risk chip** — open issues show a calibrated late-risk percentage on hover, with the top contributing factors and model version.
-- **Admin-only access** — model quality and model registry routes require an administrator; issue-level endpoints enforce `allowAccess()`.
+- **Project command center** (`/intelligence/health`) combining sprint confidence, risk distribution, top risks, workload, model health, engineering activity and recent activity.
+- **Sprint timeline** (`/intelligence/timeline/@id`) with risk-colored bars, owners, hours, dependency counts, weekly ticks, today marker and a legend.
+- **Grounded project assistant** (`/intelligence/ask`) for sprint summaries, forecasts, risk, workload, assignments and duplicate questions, with citations and no free-form hallucination.
+- **Print / PDF** styles for the command center.
 
-#### Application integration
+### 5. Collaboration and search
 
-- **HTTP ML client** — `Helper\Ml` replaces the previous `exec()` calls with a timeout-aware HTTP client, internal token authentication, error handling and graceful fallback.
-- **JSON intelligence endpoints** — `/intelligence/risk/@id`, `/intelligence/cycle/@id`, `/intelligence/forecast/@sprint`, `/intelligence/optimize`, `/intelligence/models`, `/intelligence/quality` and `/intelligence/suggestions/log`.
-- **Sprint forecast modal** — probability on time, P50/P85/P95 dates, biggest drivers and assumptions, available from the task board.
-- **Optimized assignment modal** — solver, expected fit, baseline fit, lift, fairness cap, owner changes and per-user utilization.
-- **Risk chip on issue pages** — no page reload; the chip fetches the prediction and renders a color-coded risk level.
-- **Batch risk badges** — task-board cards load calibrated risk percentages in one request, with a low/medium/high color code.
-- **Suggestion impressions** — every ranked assignee list logs a `shown` event before an acceptance is recorded, enabling a real acceptance funnel.
-- **Analytics integration** — the existing “Recompute insights” action now calls the ML service; the legacy analytics scripts remain available through a compatibility bridge.
-- **MySQL analytics bridge** — mirrors the tables the legacy scripts need into a temporary SQLite database, runs the scripts, and syncs the result tables back to MySQL. SQLite remains the native path.
-- **CSRF-protected feedback logging** — assignment acceptances are logged through the existing CSRF mechanism.
-- **Access checks** — issue suggestions and predictions verify issue visibility; model administration verifies the admin role.
+- **In-app notification center** with per-user notifications for issue updates and comments, unread badge, polling, mark-read and mark-all-read.
+- **Notification generation** from issue updates and comments, excluding the actor and targeting watchers, owners and authors.
+- **Duplicate detection** using TF-IDF over issue titles and descriptions; similar-issues panel on every issue page.
+- **Draft duplicate warning** on the new/edit issue form.
+- **Issue-list and task-board risk badges** loaded in one batch request.
 
-#### Data, migrations and deployment
+### 6. GitHub integration
 
-- **New schema** — `model_run`, `prediction`, `suggestion_log`, `forecast_run`, `assignment_run`, `assignment_item`, `user_skill`, `user_availability`, `holiday`, `git_installation`, `issue_link`, `dora_event`, `audit_log`, `job` and `event_outbox`, plus `issue.version` for future optimistic locking and query indexes.
-- **Dual-dialect migrations** — separate MySQL (`26.10.28.sql`, `26.10.29.sql`) and SQLite (`26.10.28.sqlite.sql`, `26.10.29.sqlite.sql`) files, with engine-aware migration selection.
-- **Password-width migration** — widens `user.password` and `user.salt` so modern bcrypt hashes fit.
-- **Config persistence** — a dedicated `app_config` volume plus a config symlink prevents container recreation from wiping the database.
-- **One-command stack** — `docker-compose.yml` with app, MySQL, ML service, Redis, Mercure, Qdrant, MailHog and dev tooling profiles; application and ML health checks.
-- **Multi-stage images** — Composer dependency stage, PHP production image with the required extensions, dev image with test dependencies, and a separate Python production/dev image.
-- **Makefile and environment template** — `make up`, `down`, `migrate`, `seed`, `test`, `lint`, `train`, `forecast` and `backup`; `.env.example` documents every setting.
-- **CI** — PHP matrix (MySQL/SQLite), Python lint and pytest job, and Docker build verification.
+- **Signed GitHub webhook receiver** at `/webhooks/github` with `X-Hub-Signature-256` verification when a secret is configured.
+- **Commit and pull-request linking** via `#123` references in PR titles, bodies, branches and commit messages.
+- **DORA-ready events** stored in `dora_event`, including PR cycle-time metadata.
+- **Linked work** on the issue page and engineering activity on the command center.
+- **Optional auto-close** of linked issues on PR merge (`github.auto_close`).
+- Setup and a local simulation payload in [docs/github-integration.md](docs/github-integration.md).
 
-#### Demo, documentation and tests
+### 7. Security, compatibility and data
 
-- **Deterministic demo data** — 5 users, 3 projects, 14 sprints, 360 closed tasks with realistic lateness profiles, open sprint work, tags, dependencies and activation history; demo login `demo_alice / demo1234`.
-- **Documentation** — `docs/intelligence-layer.md` covers architecture, endpoints, migrations, model notes and limitations; this README links to it.
-- **Automated tests** — 18 Python tests covering health, authentication, risk, batch risk, cycle time, forecasting, what-if scenarios, assignment, optimizer, backtesting and feedback; 24 PHP tests (2 skipped), PHPCS, PHPStan and Ruff all green locally.
-- **Operational scripts** — `cron/migrate.php`, `cron/refresh_ml.php` and `cron/seed_demo.php`.
+- Added `model_run`, `prediction`, `suggestion_log`, `forecast_run`, `assignment_run`, `assignment_item`, `user_skill`, `user_availability`, `holiday`, `git_installation`, `issue_link`, `dora_event`, `audit_log`, `job`, `event_outbox` and `notification` tables, plus `issue.version` and query indexes.
+- Widened `user.password`/`user.salt` for modern bcrypt hashes.
+- Added CSRF protection to every new write route, issue-level access checks, manager/admin guards and access-filtered similarity results.
+- Added signed webhook verification and secret configuration in the admin Integrations tab.
+- Updated the runtime to **PHP 8.5.12** (latest security release), replaced the deprecated PDO MySQL option with `Pdo\Mysql::ATTR_INIT_COMMAND`, and pinned the Docker image.
+- Updated `league/commonmark` to **2.10.4**; `composer audit --locked` reports **no security advisories**.
+- Persisted `config.php` in a dedicated volume so container recreation cannot wipe the database.
+- Hardened notification template rendering for installations without IMAP configuration.
 
-#### Not yet implemented (reserved for later phases)
+### 8. Demo, docs and tests
 
-The schema reserves tables for GitHub/GitLab integration, DORA metrics, audit logging, background jobs and outbox events, but those features are not wired into the UI yet. Real-time collaboration, semantic search/duplicate detection, the LLM copilot and multi-tenant SSO are planned next. The legacy analytics MySQL bridge is a compatibility layer, not the long-term pipeline.
+- Added a deterministic `cron/seed_demo.php` generator with 360 closed tasks, 5 users, 3 projects, 14 sprints, tags, dependencies and issue history.
+- Added `cron/migrate.php`, `cron/refresh_ml.php` and Makefile targets.
+- Added `docs/intelligence-layer.md`, `docs/github-integration.md` and this README.
+- Added **27 Python tests** covering health, auth, risk, batch risk, cycle time, forecasting, what-if, assignment, optimizer, backtesting, search and the assistant.
+- Added **24 PHP tests** (2 skipped), with PHPCS, PHPStan and Ruff passing locally on PHP 8.5.12.
+- Added UI screenshots under `docs/screenshots/`.
 
-**Added by Vedant Chalke.**
+### Not yet implemented
+
+- Real-time collaborative task board over SSE/WebSocket.
+- Embedding-based semantic search (the current duplicate detector is TF-IDF).
+- LLM-backed copilot (the current assistant is deliberately grounded and deterministic).
+- Full GitHub App installation flow and a complete DORA dashboard.
+- Multi-tenant workspaces, SSO and SCIM.
+- GitLab support and an audit-log UI.
+
+---
+
+## Documentation
+
+- [Intelligence layer: architecture, endpoints, migrations and development](docs/intelligence-layer.md)
+- [GitHub integration and local webhook simulation](docs/github-integration.md)
+- [User guide](docs/user-guide.md)
+- [System flow diagram](docs/flow-diagram.html)
+
+---
+
+## License and upstream attribution
+
+This project is a fork of [Phproject](https://github.com/Alanaktion/phproject) by Alan Hardman and is distributed under the **GNU General Public License v3.0 or later**. See [LICENSE](LICENSE).
+
+**Intelligence layer and UI additions in this fork: added by Vedant Chalke.**

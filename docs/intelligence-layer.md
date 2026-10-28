@@ -41,8 +41,12 @@ All inference endpoints require `X-Internal-Token: $ML_INTERNAL_TOKEN`.
 | `POST` | `/v1/predict/cycle` | Cycle-time estimates (P50/P85) |
 | `POST` | `/v1/forecast/sprint` | Monte Carlo sprint forecast |
 | `POST` | `/v1/assign/suggest` | Ranked assignees for an issue, sprint or draft task |
+| `POST` | `/v1/assign/optimize` | CP-SAT sprint assignment with capacity, WIP and fairness constraints |
+| `POST` | `/v1/search/similar` | TF-IDF duplicate / similar-issue search |
+| `POST` | `/v1/assistant/ask` | Grounded project assistant (forecast, risk, workload, assignment, duplicates) |
 | `GET` | `/v1/models` | Active model registry |
 | `POST` | `/v1/models/risk/refresh` | Retrain the risk model from current history |
+| `POST` | `/v1/models/risk/backtest` | Walk-forward evaluation + reliability bins |
 | `POST` | `/v1/train/analytics` | Recompute the legacy analytics/assignment tables |
 
 PHP proxies:
@@ -53,6 +57,17 @@ PHP proxies:
 | `GET` | `/intelligence/cycle/@id` | Cycle-time estimate |
 | `GET` | `/intelligence/forecast/@sprint` | Sprint forecast |
 | `GET` | `/intelligence/models` | Model registry (admin only) |
+| `GET` | `/intelligence/quality` | Model quality page (admin only) |
+| `GET` | `/intelligence/health` | Project command center (manager/admin) |
+| `GET` | `/intelligence/timeline/@sprint` | Sprint timeline / Gantt view |
+| `GET` | `/intelligence/risk-batch?ids=...` | Batch risk for task-board and issue-list badges |
+| `GET` | `/intelligence/similar/@id` | Similar issues for an issue |
+| `POST` | `/intelligence/similar` | Similar issues for draft text |
+| `POST` | `/intelligence/ask` | Grounded assistant |
+| `POST` | `/intelligence/optimize` | Optimizer preview |
+| `POST` | `/intelligence/optimize/apply` | Apply reviewed assignments (manager/admin) |
+| `GET` | `/notifications` | In-app notification center |
+| `POST` | `/webhooks/github` | Signed GitHub webhook receiver |
 | `GET` | `/assign/suggest` | Existing assignment widget |
 | `POST` | `/analytics/refresh` | Recompute analytics from the UI |
 
@@ -62,6 +77,7 @@ PHP proxies:
 prediction, feedback, forecast, assignment, skills/availability, GitHub/DORA,
 audit, job and outbox tables, plus `issue.version` for optimistic locking.
 `db/26.10.29.*` widens the password column for bcrypt hashes.
+`db/26.10.30.*` adds the in-app notification table.
 
 Apply migrations with:
 
@@ -83,6 +99,13 @@ docker compose exec app php cron/migrate.php
   analytics dashboard. On MySQL, the service mirrors the required tables into a
   temporary SQLite database, runs the scripts, and syncs the result tables back.
   This is a compatibility bridge, not the long-term pipeline.
+- Duplicate detection uses TF-IDF over titles and descriptions. It is fast and
+  deterministic; the interface can be replaced by embedding search later.
+- The grounded assistant maps questions to project operations and cites the
+  issues or sprint it used. It is not a free-form LLM and does not hallucinate
+  outside the returned data.
+- GitHub webhooks link commits/PRs to issues and store DORA-ready events. See
+  [github-integration.md](github-integration.md) for setup and a local payload.
 
 ## Development
 

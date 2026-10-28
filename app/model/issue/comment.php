@@ -31,6 +31,7 @@ class Comment extends \Model
         /** @var static $item */
         $item = parent::create($data);
         if ($notify) {
+            \Model\Notification::issueComment($item);
             $notification = \Helper\Notification::instance();
             $notification->issue_comment($item->issue_id, $item->id);
         }

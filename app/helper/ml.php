@@ -175,6 +175,24 @@ class Ml
     }
 
     /**
+     * @param array<string,mixed> $payload
+     * @return array{0:int,1:array|null,2:string|null}
+     */
+    public static function similar(array $payload): array
+    {
+        return self::request('POST', '/v1/search/similar', $payload, 20);
+    }
+
+    /**
+     * @param array<string,mixed> $payload
+     * @return array{0:int,1:array|null,2:string|null}
+     */
+    public static function ask(array $payload): array
+    {
+        return self::request('POST', '/v1/assistant/ask', $payload, 40);
+    }
+
+    /**
      * @return array{0:int,1:array|null,2:string|null}
      */
     public static function models(): array

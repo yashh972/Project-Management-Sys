@@ -56,6 +56,49 @@ class RiskBatchResponse(BaseModel):
     results: list[RiskBatchItem] = Field(default_factory=list)
 
 
+class SimilarRequest(BaseModel):
+    issue_id: int | None = Field(default=None, gt=0)
+    text: str | None = Field(default=None, max_length=8000)
+    top_k: int = Field(default=5, ge=1, le=20)
+
+    @model_validator(mode="after")
+    def has_query(self) -> SimilarRequest:
+        if (self.issue_id is None) and not (self.text and self.text.strip()):
+            raise ValueError("Provide issue_id or text")
+        return self
+
+
+class SimilarItem(BaseModel):
+    issue_id: int
+    name: str
+    score: float
+    status: str
+    owner: str | None = None
+
+
+class SimilarResponse(BaseModel):
+    results: list[SimilarItem] = Field(default_factory=list)
+    corpus: int = 0
+
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=2, max_length=2000)
+    sprint_id: int | None = Field(default=None, gt=0)
+
+
+class AskCitation(BaseModel):
+    label: str
+    url: str
+
+
+class AskResponse(BaseModel):
+    answer: str
+    citations: list[AskCitation] = Field(default_factory=list)
+    intent: str
+    sprint_id: int | None = None
+    generated_at: datetime
+
+
 class CycleRequest(BaseModel):
     issue_id: int = Field(gt=0)
 

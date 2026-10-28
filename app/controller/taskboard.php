@@ -80,9 +80,9 @@ class Taskboard extends \Controller
             }
         }
 
-        // Default to showing group tasks
+        // Admins see the whole board by default; everyone else sees their groups.
         if (empty($params["filter"])) {
-            $params["filter"] = "groups";
+            $params["filter"] = \Base::instance()->get("user.role") === "admin" ? "all" : "groups";
         }
 
         // Load the requested sprint

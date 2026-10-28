@@ -26,6 +26,7 @@
                 <a class="btn btn-default btn-sm" href="{{ @BASE }}/analytics/export?scope=overview&amp;format=csv"><span class="fa fa-file-text-o"></span> CSV</a>
                 <a class="btn btn-default btn-sm" href="{{ @BASE }}/analytics/export?scope=overview&amp;format=pdf"><span class="fa fa-file-pdf-o"></span> PDF</a>
                 <check if="{{ !@an.scoped }}">
+                    <a class="btn btn-default btn-sm" href="{{ @BASE }}/intelligence/health"><span class="fa fa-heartbeat"></span> Command center</a>
                     <a class="btn btn-default btn-sm" href="{{ @BASE }}/intelligence/quality"><span class="fa fa-flask"></span> Model quality</a>
                 </check>
             </div>

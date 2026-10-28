@@ -17,6 +17,7 @@
                     <li><a href="#config-ts" data-toggle="tab">{{ @dict.issue_types_and_statuses }}</a></li>
                     <li><a href="#config-parse" data-toggle="tab">{{ @dict.text_parsing }}</a></li>
                     <li><a href="#config-email" data-toggle="tab">{{ @dict.email_smtp_imap }}</a></li>
+                    <li><a href="#config-integrations" data-toggle="tab">Integrations</a></li>
                     <li><a href="#config-advanced" data-toggle="tab">{{ @dict.advanced }}</a></li>
                 </ul>
                 <br>
@@ -183,6 +184,40 @@
                             <textarea class="form-control input-sm" name="mail-truncate_lines" rows="4">{{ implode("\n", is_array(@mail.truncate_lines) ? @mail.truncate_lines : \Base::instance()->split(@mail.truncate_lines)) | esc }}</textarea>
                         </div>
                         <p class="alert alert-info"><strong>{{ @dict.config_note }}:</strong> {{ @dict.imap_settings_note, '<code>checkmail.php</code>' | format }}</p>
+                    </fieldset>
+                </div>
+
+                <div role="tabpanel" class="tab-pane fade" id="config-integrations">
+                    <fieldset>
+                        <legend>Intelligence service</legend>
+                        <div class="form-group">
+                            <label class="control-label" for="ml-url">Service URL</label>
+                            <input type="text" class="form-control input-sm" id="ml-url" name="ml-url" value="{{ @ml.url | esc }}" placeholder="http://ml:8000">
+                            <span class="help-block">The FastAPI sidecar used for risk, forecasts, assignments and the assistant.</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label" for="ml-token">Internal token</label>
+                            <input type="password" class="form-control input-sm" id="ml-token" name="ml-token" value="{{ @ml.token | esc }}">
+                            <span class="help-block">Shared secret sent as <code>X-Internal-Token</code>.</span>
+                        </div>
+                    </fieldset>
+                    <br>
+                    <fieldset>
+                        <legend>GitHub</legend>
+                        <div class="form-group">
+                            <label class="control-label" for="github-webhook_secret">Webhook secret</label>
+                            <input type="password" class="form-control input-sm" id="github-webhook_secret" name="github-webhook_secret" value="{{ @github.webhook_secret | esc }}">
+                            <span class="help-block">Webhook URL: <code>{{ @site.url }}webhooks/github</code>. Leave blank only for local testing.</span>
+                        </div>
+                        <div class="form-group">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="github-auto_close" value="1" {{ @github.auto_close ? 'checked' : '' }}>
+                                    Close linked issues when a pull request is merged
+                                </label>
+                            </div>
+                        </div>
+                        <p class="help-block">See <code>docs/github-integration.md</code> for the payload and setup steps.</p>
                     </fieldset>
                 </div>
 

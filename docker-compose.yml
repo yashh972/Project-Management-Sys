@@ -23,6 +23,7 @@ services:
       DB_PASSWORD: ${MYSQL_PASSWORD:-phproject}
       ML_URL: http://ml:8000
       ML_INTERNAL_TOKEN: ${ML_INTERNAL_TOKEN:-dev-internal-token}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-}
     depends_on:
       db:
         condition: service_healthy

@@ -151,6 +151,8 @@ class RiskService:
         issue = row.iloc[0]
         if int(issue["status_closed"]) == 1:
             raise ValueError("Closed issues do not need a late-risk prediction")
+        if str(issue.get("type_role")) == "project":
+            raise ValueError("Project issues do not have a late-risk score")
 
         now = datetime.now(UTC).replace(tzinfo=None)
         features = open_feature_dict(issue, snapshot.df, now=now, fallback_hours=snapshot.fallback_hours)

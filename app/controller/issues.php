@@ -804,6 +804,7 @@ class Issues extends \Controller
         $f3->set("watching", (bool) $watching->id);
 
         $f3->set("issue", $issue);
+        $f3->set("issue_links", \Helper\Git::instance()->links($issue->id));
         $f3->set("ancestors", $issue->getAncestors());
         $f3->set("type", $type);
         $f3->set("author", $author);

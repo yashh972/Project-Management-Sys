@@ -110,7 +110,7 @@
             <check if="{{ @issue.due_date && strtotime(@issue.due_date) }}">
                 <span class="meta-chip"><span class="fa fa-calendar-o"></span>{{ $this->formatDate(strtotime(@issue.due_date)) }}</span>
             </check>
-            <check if="{{ !@issue.status_closed }}">
+            <check if="{{ !@issue.status_closed && @type.role != 'project' }}">
                 <span id="risk-chip" class="meta-chip risk-chip" data-url="{{ @BASE }}/intelligence/risk/{{ @issue.id }}" title="Predicted probability of finishing late" style="display: none;">
                     <span class="fa fa-line-chart"></span><span class="risk-label">Risk</span>
                 </span>
@@ -221,6 +221,28 @@
                 <dt>{{ @dict.cols.description }}:</dt>
                 <dd class="tex">{{ @issue.description | parseText }}</dd>
             </dl>
+
+            <check if="{{ @issue_links }}">
+                <div class="issue-similar issue-links">
+                    <b>Linked work</b>
+                    <ul class="issue-similar-list">
+                        <repeat group="{{ @issue_links }}" value="{{ @link }}">
+                            <li>
+                                <a href="{{ @link.url }}" target="_blank" rel="noreferrer noopener">
+                                    <span class="fa {{ @link.kind == 'pull_request' ? 'fa-code-fork' : 'fa-code' }}"></span>
+                                    {{ @link.kind == 'pull_request' ? 'Pull request' : 'Commit' }} &middot; {{ @link.repo | esc }}
+                                </a>
+                                <span class="similar-score">{{ @link.state | esc }}</span>
+                            </li>
+                        </repeat>
+                    </ul>
+                </div>
+            </check>
+
+            <div class="issue-similar" id="similar-issues" data-url="{{ @BASE }}/intelligence/similar/{{ @issue.id }}">
+                <b>Similar issues</b>
+                <ul class="issue-similar-list"><li class="text-muted">Checking for duplicates…</li></ul>
+            </div>
 
             {~ \Helper\Plugin::instance()->callHook('render.issue_single.after_description', @issue) ~}
 

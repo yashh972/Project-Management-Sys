@@ -82,7 +82,7 @@ if ($f3->get("db.engine") == "sqlite") {
         "mysql:host=" . $f3->get("db.host") . ";port=" . $f3->get("db.port") . ";dbname=" . $f3->get("db.name"),
         $f3->get("db.user"),
         $f3->get("db.pass"),
-        [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4;']
+        [\Pdo\Mysql::ATTR_INIT_COMMAND => 'SET NAMES utf8mb4;']
     ));
 }
 
@@ -95,6 +95,15 @@ $f3->set('imap', [
     'username' => $f3->get('imap.username'),
     'password' => $f3->get('imap.password'),
     'truncate_lines' => $f3->get('imap.truncate_lines'),
+]);
+$f3->set('ml', [
+    'url' => $f3->get('ml.url') ?: getenv('ML_URL') ?: 'http://127.0.0.1:8000',
+    'token' => $f3->get('ml.token') ?: getenv('ML_INTERNAL_TOKEN') ?: '',
+    'timeout' => $f3->get('ml.timeout') ?: '30',
+]);
+$f3->set('github', [
+    'webhook_secret' => $f3->get('github.webhook_secret') ?: getenv('GITHUB_WEBHOOK_SECRET') ?: '',
+    'auto_close' => $f3->get('github.auto_close') ?: '0',
 ]);
 
 // Ensure database is up to date

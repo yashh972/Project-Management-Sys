@@ -47,6 +47,7 @@ def load_issues() -> pd.DataFrame:
                i.status,
                i.type_id,
                i.name,
+               i.description,
                i.parent_id,
                i.author_id,
                i.owner_id,

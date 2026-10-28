@@ -79,9 +79,14 @@
                 <button type="button" id="forecast-btn" class="btn btn-default btn-xs" data-url="{{ @BASE }}/intelligence/forecast/{{ @sprint.id }}" data-base="{{ @BASE }}" title="Simulate delivery for this sprint">
                     <span class="fa fa-line-chart"></span> Forecast
                 </button>
-                <button type="button" id="optimize-btn" class="btn btn-default btn-xs" data-url="{{ @BASE }}/intelligence/optimize" data-sprint="{{ @sprint.id }}" data-base="{{ @BASE }}" data-can-apply="{{ @user.rank >= \Model\User::RANK_MANAGER ? 1 : 0 }}" title="Recommend an optimal owner for each open task">
-                    <span class="fa fa-magic"></span> Optimize
-                </button>
+                <check if="{{ @user.rank >= \Model\User::RANK_MANAGER }}">
+                    <button type="button" id="optimize-btn" class="btn btn-default btn-xs" data-url="{{ @BASE }}/intelligence/optimize" data-sprint="{{ @sprint.id }}" data-base="{{ @BASE }}" data-can-apply="1" title="Recommend an optimal owner for each open task">
+                        <span class="fa fa-magic"></span> Optimize
+                    </button>
+                    <a class="btn btn-default btn-xs" href="{{ @BASE }}/intelligence/timeline/{{ @sprint.id }}" title="Open the sprint timeline">
+                        <span class="fa fa-calendar"></span> Timeline
+                    </a>
+                </check>
             </div>
         </div>
         <table class="taskboard-head">

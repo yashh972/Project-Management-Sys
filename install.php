@@ -156,6 +156,8 @@ if (
         \Model\Config::setVal('ml.url', getenv('ML_URL') ?: 'http://127.0.0.1:8000');
         \Model\Config::setVal('ml.token', getenv('ML_INTERNAL_TOKEN') ?: '');
         \Model\Config::setVal('ml.timeout', '30');
+        \Model\Config::setVal('github.webhook_secret', getenv('GITHUB_WEBHOOK_SECRET') ?: '');
+        \Model\Config::setVal('github.auto_close', '0');
 
         // Save configuration options
         if (!empty($post["language"])) {

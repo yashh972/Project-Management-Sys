@@ -10,7 +10,7 @@ from fastapi.responses import PlainTextResponse
 
 from . import __version__
 from .config import get_settings
-from .routers import assignments, forecasts, health, models, predictions, training
+from .routers import assignments, assistant, forecasts, health, models, predictions, search, training
 
 settings = get_settings()
 
@@ -26,6 +26,8 @@ app.include_router(forecasts.router)
 app.include_router(assignments.router)
 app.include_router(models.router)
 app.include_router(training.router)
+app.include_router(search.router)
+app.include_router(assistant.router)
 
 _STARTED_AT = time.time()
 

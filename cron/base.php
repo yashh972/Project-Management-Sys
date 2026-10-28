@@ -51,3 +51,12 @@ $f3->set('imap', [
     'password' => $f3->get('imap.password'),
     'truncate_lines' => $f3->get('imap.truncate_lines'),
 ]);
+$f3->set('ml', [
+    'url' => $f3->get('ml.url') ?: getenv('ML_URL') ?: 'http://127.0.0.1:8000',
+    'token' => $f3->get('ml.token') ?: getenv('ML_INTERNAL_TOKEN') ?: '',
+    'timeout' => $f3->get('ml.timeout') ?: '30',
+]);
+$f3->set('github', [
+    'webhook_secret' => $f3->get('github.webhook_secret') ?: getenv('GITHUB_WEBHOOK_SECRET') ?: '',
+    'auto_close' => $f3->get('github.auto_close') ?: '0',
+]);

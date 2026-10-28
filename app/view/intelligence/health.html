@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="{{ @this->lang() }}">
+<head>
+    <include href="blocks/head.html" />
+    <link rel="stylesheet" href="{{ @BASE }}/css/health.css">
+</head>
+<body class="health-page">
+<set fullwidth="{{ true }}" />
+<include href="blocks/navbar.html" />
+
+<div class="health-wrap">
+    <check if="{{ @health_error }}">
+        <div class="alert alert-warning">{{ @health_error | esc }}</div>
+    </check>
+
+    <check if="{{ @health }}">
+        <header class="health-head">
+            <div>
+                <span class="health-eyebrow">Project command center</span>
+                <h1>{{ @health.sprint.name | esc }}</h1>
+                <p class="health-sub">
+                    {{ $this->formatShortDate(strtotime(@health.sprint.start_date)) }} –
+                    {{ $this->formatShortDate(strtotime(@health.sprint.end_date)) }}
+                    &middot; {{ @health.closed }} of {{ @health.total }} tasks complete
+                </p>
+            </div>
+            <div class="health-actions">
+                <a class="btn btn-default btn-sm" href="{{ @BASE }}/intelligence/timeline/{{ @health.sprint.id }}"><span class="fa fa-calendar"></span> Timeline</a>
+                <a class="btn btn-default btn-sm" href="{{ @BASE }}/analytics"><span class="fa fa-line-chart"></span> Analytics</a>
+                <a class="btn btn-default btn-sm" href="{{ @BASE }}/intelligence/quality"><span class="fa fa-flask"></span> Model quality</a>
+                <button type="button" class="btn btn-default btn-sm" onclick="window.print();"><span class="fa fa-print"></span> Print / PDF</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.location.reload();"><span class="fa fa-refresh"></span> Refresh</button>
+            </div>
+        </header>
+
+        <section class="health-card health-assistant" id="assistant"
+                 data-url="{{ @BASE }}/intelligence/ask"
+                 data-sprint="{{ @health.sprint.id }}">
+            <div class="health-card-head">
+                <h2>Project assistant</h2>
+                <span class="health-pill">Grounded in your project data</span>
+            </div>
+            <div class="assistant-prompts">
+                <button type="button" class="btn btn-default btn-xs" data-q="Summarize this sprint">Summarize this sprint</button>
+                <button type="button" class="btn btn-default btn-xs" data-q="What is the forecast?">Forecast</button>
+                <button type="button" class="btn btn-default btn-xs" data-q="Which tasks are risky?">Biggest risks</button>
+                <button type="button" class="btn btn-default btn-xs" data-q="Who is overloaded?">Workload</button>
+                <button type="button" class="btn btn-default btn-xs" data-q="Who should take the highest-risk task?">Assignment</button>
+            </div>
+            <form id="assistant-form" class="assistant-form">
+                <label for="assistant-input" class="sr-only">Ask the project assistant</label>
+                <input type="text" id="assistant-input" class="form-control" autocomplete="off"
+                       placeholder="Ask about risk, workload, forecasts, assignments or duplicates…">
+                <button type="submit" class="btn btn-primary"><span class="fa fa-paper-plane"></span> Ask</button>
+            </form>
+            <div id="assistant-answer" class="assistant-answer" aria-live="polite"></div>
+        </section>
+
+        <section class="health-kpis">
+            <div class="health-kpi health-kpi-primary">
+                <span class="health-kpi-label">On-time confidence</span>
+                <span class="health-kpi-value">
+                    <check if="{{ @health.forecast }}">
+                        {{ round(@health.forecast.probability_on_time * 100) }}<small>%</small>
+                    </check>
+                    <check if="{{ !@health.forecast }}">—</check>
+                </span>
+                <span class="health-kpi-foot">Monte Carlo, 3,000 runs</span>
+            </div>
+            <div class="health-kpi">
+                <span class="health-kpi-label">Open tasks</span>
+                <span class="health-kpi-value">{{ @health.open }}</span>
+                <span class="health-kpi-foot">{{ @health.open_hours }}h remaining &middot; {{ @health.unassigned }} unassigned</span>
+            </div>
+            <div class="health-kpi">
+                <span class="health-kpi-label">Overdue</span>
+                <span class="health-kpi-value">{{ @health.overdue }}</span>
+                <span class="health-kpi-foot">Open tasks past their due date</span>
+            </div>
+            <div class="health-kpi">
+                <span class="health-kpi-label">At risk</span>
+                <span class="health-kpi-value">{{ @health.risk_counts.high + @health.risk_counts.medium }}</span>
+                <span class="health-kpi-foot">{{ @health.risk_counts.high }} high &middot; {{ @health.risk_counts.medium }} medium</span>
+            </div>
+            <div class="health-kpi">
+                <span class="health-kpi-label">Team utilization</span>
+                <span class="health-kpi-value">{{ @health.team_utilization }}<small>%</small></span>
+                <span class="health-kpi-foot">Open hours / 40h capacity</span>
+            </div>
+        </section>
+
+        <div class="health-grid">
+            <section class="health-card health-forecast">
+                <div class="health-card-head">
+                    <h2>Sprint forecast</h2>
+                    <span class="health-pill">P50 {{ @health.forecast ? @health.forecast.p50_date : '—' }}</span>
+                </div>
+                <check if="{{ @health.forecast }}">
+                    <div class="health-forecast-body">
+                        <div class="health-ring" style="--value: {{ round(@health.forecast.probability_on_time * 100) }};">
+                            <div class="health-ring-inner">
+                                <b>{{ round(@health.forecast.probability_on_time * 100) }}%</b>
+                                <span>on time</span>
+                            </div>
+                        </div>
+                        <div class="health-forecast-copy">
+                            <p><b>P85:</b> {{ @health.forecast.p85_date }} &nbsp; <b>P95:</b> {{ @health.forecast.p95_date }}</p>
+                            <p class="text-muted">Expected finish {{ @health.forecast.expected_days }} days from now.</p>
+                            <check if="{{ @health.forecast.drivers }}">
+                                <p class="health-mini-title">Biggest drivers</p>
+                                <ul class="health-drivers">
+                                    <repeat group="{{ @health.forecast.drivers }}" value="{{ @driver }}">
+                                        <li><a href="{{ @BASE }}/issues/{{ @driver.issue_id }}">{{ @driver.name | esc }}</a>
+                                            <span>{{ round(@driver.criticality * 100) }}% critical</span></li>
+                                    </repeat>
+                                </ul>
+                            </check>
+                            <a class="health-link" href="{{ @BASE }}/taskboard/{{ @health.sprint.id }}">Open the task board →</a>
+                        </div>
+                    </div>
+                </check>
+                <check if="{{ !@health.forecast }}">
+                    <p class="text-muted">{{ @health.forecast_error ?: 'Forecast unavailable.' }}</p>
+                </check>
+            </section>
+
+            <section class="health-card">
+                <div class="health-card-head">
+                    <h2>Risk distribution</h2>
+                    <span class="health-pill">{{ @health.open }} open</span>
+                </div>
+                <div class="health-risk-bars">
+                    <div class="health-risk-row">
+                        <span>High</span>
+                        <div class="health-bar"><i class="health-fill danger" style="width: {{ @health.open ? round(@health.risk_counts.high / @health.open * 100) : 0 }}%;"></i></div>
+                        <b>{{ @health.risk_counts.high }}</b>
+                    </div>
+                    <div class="health-risk-row">
+                        <span>Medium</span>
+                        <div class="health-bar"><i class="health-fill warning" style="width: {{ @health.open ? round(@health.risk_counts.medium / @health.open * 100) : 0 }}%;"></i></div>
+                        <b>{{ @health.risk_counts.medium }}</b>
+                    </div>
+                    <div class="health-risk-row">
+                        <span>Low</span>
+                        <div class="health-bar"><i class="health-fill success" style="width: {{ @health.open ? round(@health.risk_counts.low / @health.open * 100) : 0 }}%;"></i></div>
+                        <b>{{ @health.risk_counts.low }}</b>
+                    </div>
+                </div>
+                <p class="health-mini-title">Highest-risk tasks</p>
+                <check if="{{ @health.top_risks }}">
+                    <ul class="health-risk-list">
+                        <repeat group="{{ @health.top_risks }}" value="{{ @task }}">
+                            <li>
+                                <a href="{{ @BASE }}/issues/{{ @task.id }}">{{ @task.name | esc }}</a>
+                                <span class="risk-tag risk-{{ @task.risk.risk }}">{{ round(@task.risk.p_late * 100) }}%</span>
+                                <span class="health-muted">{{ @task.owner_name ?: 'Unassigned' }} &middot; {{ @task.due_date ?: 'no due date' }}</span>
+                            </li>
+                        </repeat>
+                    </ul>
+                </check>
+                <check if="{{ !@health.top_risks }}">
+                    <p class="text-muted">No medium or high risk tasks in this sprint.</p>
+                </check>
+            </section>
+
+            <section class="health-card">
+                <div class="health-card-head">
+                    <h2>Workload</h2>
+                    <span class="health-pill">40h / person</span>
+                </div>
+                <check if="{{ @health.workload }}">
+                    <ul class="health-workload">
+                        <repeat group="{{ @health.workload }}" value="{{ @member }}">
+                            <li>
+                                <div class="health-workload-top">
+                                    <b>{{ @member.user_name | esc }}</b>
+                                    <span>{{ @member.hours }}h &middot; {{ @member.tasks }} tasks</span>
+                                </div>
+                                <div class="health-bar">
+                                    <i class="health-fill {{ @member.utilization > 0.9 ? 'danger' : (@member.utilization > 0.7 ? 'warning' : '') }}"
+                                       style="width: {{ round(@member.utilization * 100) }}%;"></i>
+                                </div>
+                            </li>
+                        </repeat>
+                    </ul>
+                </check>
+                <check if="{{ !@health.workload }}">
+                    <p class="text-muted">No open work assigned.</p>
+                </check>
+                <check if="{{ @health.unassigned }}">
+                    <p class="health-warning"><span class="fa fa-exclamation-triangle"></span> {{ @health.unassigned }} open task(s) have no owner.</p>
+                </check>
+            </section>
+
+            <section class="health-card">
+                <div class="health-card-head">
+                    <h2>Model health</h2>
+                    <a class="health-link" href="{{ @BASE }}/intelligence/quality">Details →</a>
+                </div>
+                <check if="{{ @health.model }}">
+                    <div class="health-model">
+                        <div><span>ROC AUC</span><b>{{ @health.model.metrics.auc ?: '—' }}</b></div>
+                        <div><span>Brier</span><b>{{ @health.model.metrics.brier ?: '—' }}</b></div>
+                        <div><span>Calibration</span><b>{{ @health.model.metrics.ece ?: '—' }}</b></div>
+                    </div>
+                    <p class="health-muted">Active model: <code>{{ @health.model.version | esc }}</code> trained on {{ @health.model.rows }} closed tasks.</p>
+                </check>
+                <check if="{{ !@health.model }}">
+                    <p class="text-muted">{{ @health.model_error ?: 'No active model.' }}</p>
+                </check>
+                <div class="health-progress">
+                    <div class="health-progress-label"><span>Sprint progress</span><b>{{ @health.progress }}%</b></div>
+                    <div class="health-bar"><i class="health-fill success" style="width: {{ @health.progress }}%;"></i></div>
+                </div>
+            </section>
+
+            <check if="{{ @health.git.commits || @health.git.pull_requests }}">
+                <section class="health-card health-git">
+                    <div class="health-card-head">
+                        <h2>Engineering activity</h2>
+                        <span class="health-pill">GitHub · last 30 days</span>
+                    </div>
+                    <div class="health-model">
+                        <div><span>Commits</span><b>{{ @health.git.commits }}</b></div>
+                        <div><span>Pull requests</span><b>{{ @health.git.pull_requests }}</b></div>
+                        <div><span>Merged</span><b>{{ @health.git.merged }}</b></div>
+                    </div>
+                    <p class="health-muted">{{ @health.git.repos }} connected repositor{{ @health.git.repos == 1 ? 'y' : 'ies' }} · linked work appears on each issue.<check if="{{ @health.git.pr_cycle_hours !== null }}"> · median PR cycle time {{ @health.git.pr_cycle_hours }}h</check></p>
+                    <check if="{{ @health.git.recent }}">
+                        <ul class="health-activity-list">
+                            <repeat group="{{ @health.git.recent }}" value="{{ @event }}">
+                                <li>
+                                    <span class="health-activity-dot"></span>
+                                    <div>
+                                        <span class="health-git-event">{{ @event.kind == 'commit' ? 'Commit' : 'Pull request' }} · {{ @event.repo | esc }}</span>
+                                        <span class="health-muted">{{ substr(@event.occurred_at, 0, 10) }}</span>
+                                    </div>
+                                </li>
+                            </repeat>
+                        </ul>
+                    </check>
+                </section>
+            </check>
+
+            <section class="health-card health-activity">
+                <div class="health-card-head">
+                    <h2>Recent activity</h2>
+                </div>
+                <check if="{{ @health.recent }}">
+                    <ul class="health-activity-list">
+                        <repeat group="{{ @health.recent }}" value="{{ @event }}">
+                            <li>
+                                <span class="health-activity-dot"></span>
+                                <div>
+                                    <a href="{{ @BASE }}/issues/{{ @event.id }}">{{ @event.name | esc }}</a>
+                                    <span class="health-muted">updated by {{ @event.actor_name ?: 'someone' }} &middot;
+                                        {{ $this->formatDateTime($this->utc2local(strtotime(@event.created_date))) }}</span>
+                                </div>
+                            </li>
+                        </repeat>
+                    </ul>
+                </check>
+                <check if="{{ !@health.recent }}">
+                    <p class="text-muted">No activity yet.</p>
+                </check>
+            </section>
+        </div>
+    </check>
+</div>
+</body>
+</html>

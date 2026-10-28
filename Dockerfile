@@ -10,7 +10,7 @@ WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-interaction --no-progress --prefer-dist
 
-FROM php:8.4-apache AS app
+FROM php:8.5.12-apache AS app
 
 COPY --from=ghcr.io/mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions exif gd zip pdo_mysql intl curl opcache

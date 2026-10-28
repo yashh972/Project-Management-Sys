@@ -1,11 +1,13 @@
-/* Add calibrated late-risk badges to task-board cards. */
+/* Add calibrated late-risk badges to task-board cards and issue-list rows. */
 (function () {
 	'use strict';
 
-	var cards = Array.prototype.slice.call(document.querySelectorAll('.card.task[data-id]'));
-	if (!cards.length || typeof BASE === 'undefined') { return; }
+	var elements = Array.prototype.slice.call(
+		document.querySelectorAll('.card.task[data-id], tr[data-id]')
+	);
+	if (!elements.length || typeof BASE === 'undefined') { return; }
 
-	var ids = cards.map(function (card) { return card.getAttribute('data-id'); }).filter(Boolean);
+	var ids = elements.map(function (element) { return element.getAttribute('data-id'); }).filter(Boolean);
 	if (!ids.length) { return; }
 
 	fetch(BASE + '/intelligence/risk-batch?ids=' + encodeURIComponent(ids.join(',')), {
@@ -16,19 +18,28 @@
 		.then(function (data) {
 			(data.results || []).forEach(function (result) {
 				if (result.error || result.p_late == null) { return; }
-				var card = document.getElementById('task_' + result.issue_id);
-				if (!card || card.querySelector('.risk-badge')) { return; }
+				var element = document.getElementById('task_' + result.issue_id)
+					|| document.querySelector('tr[data-id="' + result.issue_id + '"]');
+				if (!element || element.querySelector('.risk-badge')) { return; }
 
 				var percent = Math.round(result.p_late * 100);
 				var badge = document.createElement('span');
 				badge.className = 'risk-badge risk-' + result.risk;
 				badge.textContent = percent + '%';
 				badge.title = 'Predicted late risk: ' + percent + '% (' + result.risk + ')';
-				var top = card.querySelector('.top');
-				if (top) {
-					top.insertBefore(badge, top.firstChild);
+
+				if (element.classList.contains('card')) {
+					var top = element.querySelector('.top');
+					if (top) {
+						top.insertBefore(badge, top.firstChild);
+					} else {
+						element.appendChild(badge);
+					}
 				} else {
-					card.appendChild(badge);
+					var title = element.querySelector('.issue-title');
+					if (title) {
+						title.appendChild(badge);
+					}
 				}
 			});
 		})

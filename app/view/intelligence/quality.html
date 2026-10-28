@@ -27,22 +27,22 @@
         <div class="an-kpis">
             <div class="an-card an-kpi">
                 <div class="an-kpi-top">ROC AUC</div>
-                <div class="an-kpi-value">{{ @quality.overall.auc ?: '—' }}</div>
+                <div class="an-kpi-value">{{ @quality.overall.auc ? round(@quality.overall.auc, 3) : '—' }}</div>
                 <div class="an-kpi-sub">Higher is better; 0.5 is random</div>
             </div>
             <div class="an-card an-kpi">
                 <div class="an-kpi-top">Brier score</div>
-                <div class="an-kpi-value">{{ @quality.overall.brier ?: '—' }}</div>
+                <div class="an-kpi-value">{{ @quality.overall.brier ? round(@quality.overall.brier, 3) : '—' }}</div>
                 <div class="an-kpi-sub">Lower is better</div>
             </div>
             <div class="an-card an-kpi">
                 <div class="an-kpi-top">Calibration error</div>
-                <div class="an-kpi-value">{{ @quality.overall.ece ?: '—' }}</div>
+                <div class="an-kpi-value">{{ @quality.overall.ece ? round(@quality.overall.ece, 3) : '—' }}</div>
                 <div class="an-kpi-sub">Gap between predicted and observed</div>
             </div>
             <div class="an-card an-kpi">
                 <div class="an-kpi-top">Precision @ 10%</div>
-                <div class="an-kpi-value">{{ @quality.overall.precision_at_10pct ?: '—' }}</div>
+                <div class="an-kpi-value">{{ @quality.overall.precision_at_10pct ? round(@quality.overall.precision_at_10pct, 3) : '—' }}</div>
                 <div class="an-kpi-sub">Late tasks in the highest-risk decile</div>
             </div>
         </div>
@@ -70,9 +70,9 @@
                                     <td>{{ @fold.train_rows }}</td>
                                     <td>{{ @fold.test_rows }}</td>
                                     <td>{{ @fold.period_start }} → {{ @fold.period_end }}</td>
-                                    <td>{{ @fold.auc ?: '—' }}</td>
-                                    <td>{{ @fold.brier ?: '—' }}</td>
-                                    <td>{{ @fold.ece ?: '—' }}</td>
+                                    <td>{{ @fold.auc ? round(@fold.auc, 3) : '—' }}</td>
+                                    <td>{{ @fold.brier ? round(@fold.brier, 3) : '—' }}</td>
+                                    <td>{{ @fold.ece ? round(@fold.ece, 3) : '—' }}</td>
                                 </tr>
                             </repeat>
                         </tbody>
@@ -97,8 +97,8 @@
                                 <tr>
                                     <td>{{ @bin.bin }}</td>
                                     <td>{{ @bin.count }}</td>
-                                    <td>{{ @bin.predicted ?: '—' }}</td>
-                                    <td>{{ @bin.observed ?: '—' }}</td>
+                                    <td>{{ @bin.predicted ? round(@bin.predicted, 3) : '—' }}</td>
+                                    <td>{{ @bin.observed ? round(@bin.observed, 3) : '—' }}</td>
                                 </tr>
                             </repeat>
                         </tbody>
@@ -108,7 +108,7 @@
             <check if="{{ !@quality.reliability }}">
                 <p class="an-muted an-pad">No reliability data yet.</p>
             </check>
-            <p class="an-note">Trained on {{ @quality.rows }} closed tasks. Generated {{ @quality.generated_at }} UTC. A calibrated model's predicted probability should match the observed late rate in each bin.</p>
+            <p class="an-note">Trained on {{ @quality.rows }} closed tasks. Generated {{ substr(@quality.generated_at, 0, 16) }} UTC. A calibrated model's predicted probability should match the observed late rate in each bin.</p>
         </section>
     </check>
 
@@ -126,7 +126,7 @@
                                 <td>{{ @model.rows }}</td>
                                 <td>
                                     <repeat group="{{ @model.metrics }}" value="{{ @value }}" key="{{ @key }}">
-                                        <span class="label label-default">{{ @key }}: {{ @value }}</span>
+                                        <span class="label label-default">{{ @key }}: {{ is_numeric(@value) ? round(@value, 3) : @value }}</span>
                                     </repeat>
                                 </td>
                                 <td>{{ @model.active ? 'active' : 'inactive' }}</td>

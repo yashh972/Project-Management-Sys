@@ -7,7 +7,7 @@ This guide is designed for AI coding agents and developers working on the Phproj
 Phproject is a high-performance project management system written in PHP. It's a full-featured web application built on the Fat-Free Framework (F3) with support for MySQL and SQLite databases.
 
 **Key Technologies:**
-- PHP 8.1+ (PSR-12 coding standard)
+- PHP 8.5.12+ (PSR-12 coding standard; latest security release)
 - Fat-Free Framework (F3) v3.9+
 - MySQL 8+ or SQLite
 - Composer for dependency management
@@ -41,7 +41,7 @@ phproject/
 ## Initial Setup
 
 ### Prerequisites
-- PHP 8.1 or higher
+- PHP 8.5.12 or higher
 - Composer
 - MySQL 8+ or SQLite
 - Git
@@ -103,7 +103,7 @@ vendor/bin/rector process --dry-run
 ```
 
 **Configuration:** `rector.php`
-- Targets PHP 8.1+ features
+- Targets PHP 8.5+ features
 - Scans: `app/`, `cron/`, `tests/`
 - Skips: `app/plugin/`
 - Rules: type declarations, dead code removal, code quality, early returns, coding style
@@ -172,7 +172,7 @@ docker buildx build --platform "linux/amd64,linux/arm/v7,linux/arm64" \
 
 3. **Code style guidelines:**
    - Follow PSR-12 coding standard (with project exceptions)
-   - Use type declarations where possible (PHP 8.1+)
+   - Use type declarations where possible (PHP 8.5+)
    - Avoid banned functions (sizeof, is_null, print, delete, create_function)
    - Match existing comment style in the file
 
@@ -221,7 +221,7 @@ The project uses GitHub Actions for CI (`.github/workflows/ci.yml`):
 5. PHPUnit tests
 
 **Matrix Testing:**
-- PHP versions: 8.1, 8.2, 8.3, 8.4
+- PHP versions: 8.5, plus 8.6 experimental
 - Database engines: MySQL 8, SQLite
 
 ## Contributing

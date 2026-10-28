@@ -300,6 +300,7 @@ class Issue extends \Model
         // Log updated fields
         $updated = 0;
         $importantChanges = 0;
+        $changed = [];
         $importantFields = ['status', 'name', 'description', 'owner_id', 'priority', 'due_date'];
         foreach ($this->fields as $key => $field) {
             if ($field["changed"] && rtrim($field["value"] ?? '') !== rtrim($this->_getPrev($key) ?? '')) {
@@ -309,6 +310,7 @@ class Issue extends \Model
                 $updateField->old_value = $this->_getPrev($key);
                 $updateField->new_value = $field["value"];
                 $updateField->save();
+                $changed[$key] = ['old' => $this->_getPrev($key), 'new' => $field["value"]];
                 $updated++;
                 if ($key == 'sprint_id') {
                     $this->resetTaskSprints();
@@ -329,6 +331,17 @@ class Issue extends \Model
         if ($notify && $importantChanges) {
             $update->notify = 1;
             $update->save();
+        }
+
+        // In-app notifications for watchers and the new owner.
+        if ($update->id && $notify && ($importantChanges || $f3->exists('update_comment'))) {
+            \Model\Notification::issueUpdate(
+                $this,
+                $update,
+                $changed,
+                (int) $f3->get('user.id'),
+                $f3->exists('update_comment')
+            );
         }
 
         // Send back the update

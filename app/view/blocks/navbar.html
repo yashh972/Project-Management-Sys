@@ -73,6 +73,11 @@
                 <li class="{{ @menuitem == 'analytics' ? 'active':'' }}">
                     <a href="{{ @BASE }}/analytics"><span class="fa fa-line-chart"></span><span class="sb-text">{{ @user.role == 'admin' ? 'Analytics' : 'My Analytics' }}</span></a>
                 </li>
+                <check if="{{ @user.rank >= \Model\User::RANK_MANAGER }}">
+                    <li class="{{ @menuitem == 'health' ? 'active':'' }}">
+                        <a href="{{ @BASE }}/intelligence/health"><span class="fa fa-heartbeat"></span><span class="sb-text">Command center</span></a>
+                    </li>
+                </check>
                 <li class="dropdown {{ @menuitem == 'browse' ? 'active':'' }}">
                     <a href="{{ @BASE }}/issues" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" accesskey="b">
                         <span class="fa fa-th-list"></span><span class="sb-text">{{ @dict.browse }}</span> <b class="caret"></b>
@@ -104,6 +109,12 @@
             </ul>
 
             <ul class="nav navbar-nav navbar-right sb-footer">
+                <li class="{{ @menuitem == 'notifications' ? 'active' : '' }}">
+                    <a href="{{ @BASE }}/notifications" class="sb-notif" title="Notifications" aria-label="Notifications">
+                        <span class="fa fa-bell"></span>
+                        <span id="notification-badge" class="badge sb-notif-badge" style="{{ @notification_count ? '' : 'display: none;' }}">{{ @notification_count ?: '' }}</span>
+                    </a>
+                </li>
                 <check if="{{ @user.role=='admin' }}">
                     <li class="{{ @menuitem == 'admin' ? 'active':'' }}">
                         <a href="{{ @BASE }}/admin" accesskey="a">

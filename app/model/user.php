@@ -53,6 +53,7 @@ class User extends \Model
             if ($this->id) {
                 $f3->set("user", $this->cast());
                 $f3->set("user_obj", $this);
+                $f3->set("notification_count", \Model\Notification::unreadCount((int) $this->id));
 
                 // Change default language if user has selected one
                 if ($this->exists("language") && $this->language) {

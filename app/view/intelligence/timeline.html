@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="{{ @this->lang() }}">
+<head>
+    <include href="blocks/head.html" />
+    <link rel="stylesheet" href="{{ @BASE }}/css/timeline.css">
+</head>
+<body class="timeline-page">
+<set fullwidth="{{ true }}" />
+<include href="blocks/navbar.html" />
+
+<div class="timeline-wrap">
+    <header class="timeline-head">
+        <div>
+            <span class="timeline-eyebrow">Sprint timeline</span>
+            <h1>{{ @timeline.sprint.name | esc }}</h1>
+            <p class="timeline-sub">{{ @timeline.range_start }} – {{ @timeline.range_end }} &middot; {{ count(@timeline.tasks) }} tasks</p>
+        </div>
+        <div class="timeline-actions">
+            <a class="btn btn-default btn-sm" href="{{ @BASE }}/taskboard/{{ @timeline.sprint.id }}"><span class="fa fa-columns"></span> Task board</a>
+            <a class="btn btn-default btn-sm" href="{{ @BASE }}/intelligence/health"><span class="fa fa-heartbeat"></span> Command center</a>
+        </div>
+    </header>
+
+    <div class="timeline-legend">
+        <span><i class="legend-dot high"></i> High risk</span>
+        <span><i class="legend-dot medium"></i> Medium</span>
+        <span><i class="legend-dot low"></i> Low</span>
+        <span><i class="legend-dot closed"></i> Completed</span>
+        <span><i class="legend-line"></i> Today</span>
+    </div>
+
+    <check if="{{ @timeline.tasks }}">
+        <div class="timeline-scroll">
+            <div class="timeline-card">
+                <div class="timeline-header-row">
+                    <div class="timeline-label-head">Task</div>
+                    <div class="timeline-ticks">
+                        <repeat group="{{ @timeline.ticks }}" value="{{ @tick }}">
+                            <span class="timeline-tick" style="left: {{ @tick.left }}%;"><i></i><b>{{ @tick.label }}</b></span>
+                        </repeat>
+                    </div>
+                    <div class="timeline-meta-head">Risk / dates</div>
+                </div>
+
+                <div class="timeline-rows">
+                    <repeat group="{{ @timeline.tasks }}" value="{{ @task }}">
+                        <div class="timeline-row">
+                            <div class="timeline-label">
+                                <a href="{{ @BASE }}/issues/{{ @task.id }}">{{ @task.name | esc }}</a>
+                                <span class="timeline-owner">{{ @task.owner | esc }}{{ @task.hours ? ' · ' . @task.hours . 'h' : '' }}</span>
+                                <check if="{{ @task.deps }}">
+                                    <span class="timeline-deps"><span class="fa fa-link"></span> {{ @task.deps }} dependency{{ @task.deps == 1 ? '' : 's' }}</span>
+                                </check>
+                            </div>
+                            <div class="timeline-track">
+                                <check if="{{ @timeline.today_left !== null }}">
+                                    <span class="timeline-today" style="left: {{ @timeline.today_left }}%;"></span>
+                                </check>
+                                <span class="timeline-bar {{ @task.closed ? 'closed' : (@task.risk ?: 'low') }}"
+                                      style="left: {{ @task.left }}%; width: {{ @task.width }}%;"
+                                      title="{{ @task.name | esc }} — {{ @task.start }} to {{ @task.due }}"></span>
+                            </div>
+                            <div class="timeline-meta">
+                                <check if="{{ @task.closed }}">
+                                    <span class="timeline-status done">Done</span>
+                                </check>
+                                <check if="{{ !@task.closed && @task.p_late !== null }}">
+                                    <span class="timeline-status {{ @task.risk }}">{{ round(@task.p_late * 100) }}%</span>
+                                </check>
+                                <span class="timeline-dates">{{ @task.start }} → {{ @task.due }}</span>
+                            </div>
+                        </div>
+                    </repeat>
+                </div>
+            </div>
+        </div>
+    </check>
+    <check if="{{ !@timeline.tasks }}">
+        <div class="timeline-empty">
+            <span class="fa fa-calendar-o"></span>
+            <h3>No tasks in this sprint yet</h3>
+            <p class="text-muted">Add tasks from the backlog or task board to see the timeline.</p>
+        </div>
+    </check>
+</div>
+</body>
+</html>
