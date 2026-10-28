@@ -24,6 +24,80 @@
     background: #f3f4f6;
 }
 
+.risk-explanation {
+    flex: 1 1 100%;
+    margin-top: 0.35rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid #e5eaf2;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--surface, #fff) 82%, #f8fafc);
+}
+
+.risk-explanation-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.45rem;
+}
+
+.risk-explanation-head b {
+    color: #374151;
+    font-size: 0.8rem;
+}
+
+.risk-explanation-head span {
+    color: #94a3b8;
+    font-size: 0.68rem;
+}
+
+.risk-factor {
+    display: grid;
+    grid-template-columns: 108px minmax(80px, 1fr) 52px;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.16rem 0;
+}
+
+.risk-factor-name {
+    color: #475569;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.risk-factor-bar {
+    display: block;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #eef2f7;
+}
+
+.risk-factor-bar i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #dc2626;
+}
+
+.risk-factor-bar i.decreases {
+    background: #15bc9c;
+}
+
+.risk-factor-impact {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: right;
+}
+
+.risk-factor-impact.increases {
+    color: #b91c1c;
+}
+
+.risk-factor-impact.decreases {
+    color: #047857;
+}
+
 .forecast-drivers {
     margin: 0 0 1rem 1.2rem;
     padding: 0;

@@ -41,6 +41,14 @@ Agile CodeBoard is built on [Phproject](https://github.com/Alanaktion/phproject)
 
 ![Sprint timeline](docs/screenshots/timeline.png)
 
+### Explainable AI — per-issue risk factors
+
+![Explainable AI](docs/screenshots/explainable-ai.png)
+
+### Grounded project assistant
+
+![Grounded assistant](docs/screenshots/assistant.png)
+
 ### Model quality
 
 ![Model quality](docs/screenshots/model-quality.png)
@@ -128,7 +136,7 @@ make forecast    # forecast the current sprint
 ### 2. Predictive intelligence
 
 - **Calibrated late-risk model** trained on issue history and audit fields, with time-aware features (planned hours, priority, bug flag, window, queue time, pressure, owner trailing late rate, owner load).
-- **Per-issue explanations** with the top contributing features and direction.
+- **Per-issue explanations** with the top contributing features and direction, rendered as a visible “Why this risk?” panel with impact bars.
 - **Cycle-time estimates** (P50/P85/P95) from activation-to-close history.
 - **Model quality metrics**: ROC AUC, Brier score, expected calibration error, precision at the top 10%, reliability bins and per-fold results.
 - **Walk-forward backtesting** (`/v1/models/risk/backtest`) with weighted fold summaries.
