@@ -9,8 +9,12 @@ class StringTest extends TestCase
     protected function setUp(): void
     {
         $f3 = \Base::instance();
+        date_default_timezone_set('UTC');
         $f3->set('TZ', 'America/Phoenix');
+        $f3->set('site.timezone', 'America/Phoenix');
+        $f3->set('site.timeoffset', null);
         $f3->set('LANGUAGE', 'en');
+        \Helper\View::clearFormatterCache();
     }
 
     public function testSalt(): void

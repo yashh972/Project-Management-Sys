@@ -12,6 +12,7 @@
 <script src="{{ @BASE }}/js/bootstrap.min.js"></script>
 <script src="{{ @BASE }}/js/mousetrap-1.6.5.min.js"></script>
 <script src="{{ @BASE }}/js/global.js"></script>
+<script src="{{ @BASE }}/js/intelligence.js"></script>
 
 <repeat group="{{ \Helper\Plugin::instance()->getJsFiles(@PATH) }}" value="{{ @file }}">
     <script src="{{ @file }}"></script>

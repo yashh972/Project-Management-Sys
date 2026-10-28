@@ -110,6 +110,11 @@
             <check if="{{ @issue.due_date && strtotime(@issue.due_date) }}">
                 <span class="meta-chip"><span class="fa fa-calendar-o"></span>{{ $this->formatDate(strtotime(@issue.due_date)) }}</span>
             </check>
+            <check if="{{ !@issue.status_closed }}">
+                <span id="risk-chip" class="meta-chip risk-chip" data-url="{{ @BASE }}/intelligence/risk/{{ @issue.id }}" title="Predicted probability of finishing late" style="display: none;">
+                    <span class="fa fa-line-chart"></span><span class="risk-label">Risk</span>
+                </span>
+            </check>
             <check if="{{ @issue.sprint_id }}">
                 <a class="meta-chip" href="{{ @BASE }}/taskboard/{{ @sprint.id }}"><span class="fa fa-bolt"></span>{{ @sprint.name | esc }}</a>
             </check>

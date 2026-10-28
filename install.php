@@ -153,6 +153,9 @@ if (
         \Model\Config::setVal('gravatar.default', 'mm');
         \Model\Config::setVal('mail.truncate_lines', '<--->,--- ---,------------------------------');
         \Model\Config::setVal('files.maxsize', 2097152);
+        \Model\Config::setVal('ml.url', getenv('ML_URL') ?: 'http://127.0.0.1:8000');
+        \Model\Config::setVal('ml.token', getenv('ML_INTERNAL_TOKEN') ?: '');
+        \Model\Config::setVal('ml.timeout', '30');
 
         // Save configuration options
         if (!empty($post["language"])) {

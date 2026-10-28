@@ -1,0 +1,160 @@
+name: agile-codeboard
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    ports:
+      - "${APP_PORT:-9090}:80"
+    environment:
+      SITE_NAME: ${SITE_NAME:-Agile CodeBoard}
+      SITE_URL: ${SITE_URL:-http://localhost:9090/}
+      SITE_TIMEZONE: ${SITE_TIMEZONE:-UTC}
+      MAIL_FROM: ${MAIL_FROM:-noreply@example.com}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-phproject}
+      DB_USER: ${MYSQL_USER:-phproject}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-phproject}
+      ML_URL: http://ml:8000
+      ML_INTERNAL_TOKEN: ${ML_INTERNAL_TOKEN:-dev-internal-token}
+    depends_on:
+      db:
+        condition: service_healthy
+      ml:
+        condition: service_started
+    volumes:
+      - app_config:/var/www/html/storage
+      - app_uploads:/var/www/html/uploads
+      - app_logs:/var/www/html/log
+      - app_tmp:/var/www/html/tmp
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.4
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-phproject}
+      MYSQL_USER: ${MYSQL_USER:-phproject}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-phproject}
+    ports:
+      - "${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  ml:
+    build:
+      context: .
+      dockerfile: ml-service/Dockerfile
+    environment:
+      ML_ENV: ${ML_ENV:-dev}
+      ML_INTERNAL_TOKEN: ${ML_INTERNAL_TOKEN:-dev-internal-token}
+      PHPROJECT_ROOT: /app
+      PHPROJECT_DB_ENGINE: mysql
+      PHPROJECT_DB_HOST: db
+      PHPROJECT_DB_PORT: 3306
+      PHPROJECT_DB_NAME: ${MYSQL_DATABASE:-phproject}
+      PHPROJECT_DB_USER: ${MYSQL_USER:-phproject}
+      PHPROJECT_DB_PASSWORD: ${MYSQL_PASSWORD:-phproject}
+      ML_MODEL_DIR: /app/artifacts
+      ML_LEGACY_DIR: /app/legacy-ml
+    ports:
+      - "${ML_PORT:-8000}:8000"
+    volumes:
+      - ml_artifacts:/app/artifacts
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["realtime", "worker"]
+    restart: unless-stopped
+
+  mercure:
+    image: dunglas/mercure
+    profiles: ["realtime"]
+    environment:
+      SERVER_NAME: ":8080"
+      MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_JWT_KEY:-dev-mercure-key}
+      MERCURE_SUBSCRIBER_JWT_KEY: ${MERCURE_JWT_KEY:-dev-mercure-key}
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_origins http://localhost:${APP_PORT:-9090}
+        anonymous 0
+    ports:
+      - "${MERCURE_PORT:-8081}:8080"
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    profiles: ["search"]
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    profiles: ["dev"]
+    ports:
+      - "${MAILHOG_PORT:-8025}:8025"
+    restart: unless-stopped
+
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    profiles: ["tools"]
+    entrypoint: ["dev-entrypoint"]
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-phproject}
+      DB_USER: ${MYSQL_USER:-phproject}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-phproject}
+      ML_URL: http://ml:8000
+      ML_INTERNAL_TOKEN: ${ML_INTERNAL_TOKEN:-dev-internal-token}
+    depends_on:
+      db:
+        condition: service_healthy
+    working_dir: /var/www/html
+
+  ml-dev:
+    build:
+      context: .
+      dockerfile: ml-service/Dockerfile
+      target: dev
+    profiles: ["tools"]
+    environment:
+      ML_ENV: test
+      ML_INTERNAL_TOKEN: test-token
+      PHPROJECT_ROOT: /app
+      PHPROJECT_DB_ENGINE: sqlite
+      PHPROJECT_DB_NAME: /tmp/test.sqlite
+      ML_LEGACY_DIR: /app/legacy-ml
+    working_dir: /app
+
+volumes:
+  db_data:
+  app_config:
+  app_uploads:
+  app_logs:
+  app_tmp:
+  ml_artifacts:
+  qdrant_data:

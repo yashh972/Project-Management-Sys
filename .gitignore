@@ -12,3 +12,8 @@ __pycache__/
 /phproject.db.bak*
 /ml/assign_model.joblib
 /credentials.txt
+/.env
+/ml-service/artifacts/
+/ml-service/.pytest_cache/
+/ml-service/.ruff_cache/
+/backups/

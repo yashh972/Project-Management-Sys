@@ -6,3 +6,15 @@
 .vscode
 *.sqlite
 config.php
+vendor
+node_modules
+ml/.venv
+ml-service/.venv
+ml-service/artifacts
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+log/*
+tmp/cache/*
+uploads/*

@@ -90,12 +90,17 @@ class Security extends \Prefab
             $version = $result[0]["version"];
         }
 
-        // Check available versions
+        // Check available versions. Only top-level migration files are candidates;
+        // engine-specific variants such as 26.10.28.sqlite.sql are selected later.
         $db_files = scandir("db");
         foreach ($db_files as $file) {
-            $file = substr($file, 0, -4);
-            if (version_compare($file, $version) > 0) {
-                return $file;
+            if (!preg_match('/^\d{2}\.\d{2}\.\d{2}(?:\.\d+)?\.sql$/', $file)) {
+                continue;
+            }
+
+            $candidate = substr($file, 0, -4);
+            if (version_compare($candidate, $version) > 0) {
+                return $candidate;
             }
         }
 
@@ -108,14 +113,24 @@ class Security extends \Prefab
     public function updateDatabase(string $version): void
     {
         $f3 = \Base::instance();
-        if (file_exists("db/{$version}.sql")) {
-            $update_db = file_get_contents("db/{$version}.sql");
+        $engine = (string) $f3->get("db.engine");
+        $file = "db/{$version}.sql";
+        if ($engine === "sqlite" && file_exists("db/{$version}.sqlite.sql")) {
+            $file = "db/{$version}.sqlite.sql";
+        }
+
+        if (file_exists($file)) {
+            $update_db = file_get_contents($file);
             $db = $f3->get("db.instance");
             foreach (explode(";", $update_db) as $stmt) {
-                $db->exec($stmt);
+                $stmt = trim($stmt);
+                if ($stmt !== '') {
+                    $db->exec($stmt);
+                }
             }
 
             \Cache::instance()->reset();
+            $f3->set("version", $version);
             $f3->set("success", " Database updated to version: {$version}");
         } else {
             $f3->set("error", " Database file not found for version: {$version}");

@@ -75,6 +75,14 @@
                     </false>
                 </check>
             </div>
+            <div class="btn-group">
+                <button type="button" id="forecast-btn" class="btn btn-default btn-xs" data-url="{{ @BASE }}/intelligence/forecast/{{ @sprint.id }}" data-base="{{ @BASE }}" title="Simulate delivery for this sprint">
+                    <span class="fa fa-line-chart"></span> Forecast
+                </button>
+                <button type="button" id="optimize-btn" class="btn btn-default btn-xs" data-url="{{ @BASE }}/intelligence/optimize" data-sprint="{{ @sprint.id }}" data-base="{{ @BASE }}" title="Recommend an optimal owner for each open task">
+                    <span class="fa fa-magic"></span> Optimize
+                </button>
+            </div>
         </div>
         <table class="taskboard-head">
             <tr class="tb-row">
@@ -468,5 +476,39 @@
             <script src="{{ @BASE }}/js/taskboard-counts.js"></script>
         </false>
     </check>
+    <div class="modal fade" id="forecast-modal" tabindex="-1" role="dialog" aria-labelledby="forecast-title">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="forecast-title">Sprint forecast</h4>
+                </div>
+                <div class="modal-body" id="forecast-body">
+                    <p class="text-muted">Simulating delivery…</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="optimize-modal" tabindex="-1" role="dialog" aria-labelledby="optimize-title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="optimize-title">Optimized sprint assignment</h4>
+                </div>
+                <div class="modal-body" id="optimize-body">
+                    <p class="text-muted">Solving…</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ @BASE }}/js/forecast.js"></script>
+    <script src="{{ @BASE }}/js/optimize.js"></script>
 </body>
 </html>

@@ -1,0 +1,38 @@
+/* Intelligence layer components */
+.risk-chip {
+    border: 1px solid currentColor;
+    font-weight: 600;
+}
+
+.risk-chip.risk-low {
+    color: #1a7f4b;
+    background: #e8f7ef;
+}
+
+.risk-chip.risk-medium {
+    color: #8a5b00;
+    background: #fff6df;
+}
+
+.risk-chip.risk-high {
+    color: #a12622;
+    background: #fdeceb;
+}
+
+.risk-chip.risk-unknown {
+    color: #6b7280;
+    background: #f3f4f6;
+}
+
+.forecast-drivers {
+    margin: 0 0 1rem 1.2rem;
+    padding: 0;
+}
+
+.forecast-drivers li {
+    margin-bottom: 0.35rem;
+}
+
+#forecast-modal .modal-body {
+    min-height: 120px;
+}

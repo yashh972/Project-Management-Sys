@@ -59,11 +59,11 @@ jobs:
           key: ${{ runner.os }}-ci-${{ env.cache-name }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-ci-${{ env.cache-name }}-
+            ${{ runner.os }}-ci-${{ env.cache-name }}-
             ${{ runner.os }}-ci-
-            ${{ runner.os }}-
 
       - name: Syntax check
-        run: if find . -name "*.php" ! -path "./vendor/*" -exec php -l {} 2>&1 \; | grep "syntax error, unexpected"; then exit 1; fi
+        run: if find . -name "*.php" ! -path "./vendor/*" ! -path "./ml-service/*" -exec php -l {} 2>&1 \; | grep "syntax error, unexpected"; then exit 1; fi
 
       - name: Composer
         env:
@@ -82,45 +82,54 @@ jobs:
         name: Install Phproject (SQLite)
         run: php install.php --site-name=Test --site-url=http://localhost/ --timezone=America/Phoenix --admin-username=test --admin-email=test@example.com --admin-password=secret --db-engine=sqlite --db-name=database.sqlite
 
-      - name: PHPUnit tests
+      - name: Test
         run: vendor/bin/phpunit --no-progress
 
-  build-image:
-    runs-on: ubuntu-latest
-    needs: ci
-    if: success() && github.ref == 'refs/heads/master'
-    permissions:
-      contents: read
-      packages: write
+  ml:
+    runs-on: ubuntu-24.04
+    name: ML service (Python)
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        working-directory: ml-service
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        working-directory: ml-service
+        run: ruff check app tests
+
+      - name: Test
+        working-directory: ml-service
+        run: pytest -q
+
+  docker:
+    runs-on: ubuntu-24.04
+    name: Docker build
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build application image
+        uses: docker/build-push-action@v7
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-      - name: Available platforms
-        run: echo ${{ steps.buildx.outputs.platforms }}
-      - name: Run release build
-        run: |
-          docker run --rm \
-            --volume $PWD:/app \
-            --user $(id -u):$(id -g) \
-            --env COMPOSER_AUTH='{"github-oauth":{"github.com":"${{ github.token }}"}}' \
-            composer install --no-ansi --no-interaction --no-dev
-          docker buildx build \
-            --platform "linux/amd64,linux/arm/v7,linux/arm64" \
-            --tag "docker.io/alanaktion/phproject:apache-master" \
-            --tag "ghcr.io/alanaktion/phproject:apache-master" \
-            --push .
+          context: .
+          target: app
+          push: false
+          tags: agile-codeboard:ci
+
+      - name: Build ML image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ml-service/Dockerfile
+          push: false
+          tags: agile-codeboard-ml:ci

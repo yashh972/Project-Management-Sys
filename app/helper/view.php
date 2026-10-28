@@ -10,6 +10,14 @@ class View extends \Template
     private static array $formatterCache = [];
 
     /**
+     * Clear cached Intl formatters (used by tests when the timezone changes).
+     */
+    public static function clearFormatterCache(): void
+    {
+        self::$formatterCache = [];
+    }
+
+    /**
      * Return a cached IntlDateFormatter, or null if ext-intl is unavailable.
      */
     private function getFormatter(string $locale, int $dateType, int $timeType): ?\IntlDateFormatter

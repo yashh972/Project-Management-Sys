@@ -25,6 +25,9 @@
             <div class="an-export" title="Export this overview">
                 <a class="btn btn-default btn-sm" href="{{ @BASE }}/analytics/export?scope=overview&amp;format=csv"><span class="fa fa-file-text-o"></span> CSV</a>
                 <a class="btn btn-default btn-sm" href="{{ @BASE }}/analytics/export?scope=overview&amp;format=pdf"><span class="fa fa-file-pdf-o"></span> PDF</a>
+                <check if="{{ !@an.scoped }}">
+                    <a class="btn btn-default btn-sm" href="{{ @BASE }}/intelligence/quality"><span class="fa fa-flask"></span> Model quality</a>
+                </check>
             </div>
             <check if="{{ !@an.scoped }}"><form method="post" action="{{ @BASE }}/analytics/refresh" id="an-refresh" class="an-refresh" onsubmit="this.querySelector('button').disabled=true;this.querySelector('span.txt').textContent='Analysing…';">
                 <csrf-token />

@@ -8,6 +8,7 @@
 	var list = document.getElementById('assign-suggest-list');
 	var form = document.getElementById('edit-form') || box.closest('form');
 	var DEFAULT_HINT = status.textContent;
+	var lastRecommendation = null;
 
 	function field(name) { return form ? form.querySelector('[name="' + name + '"]') : null; }
 	function val(name) { var f = field(name); return f ? f.value : ''; }
@@ -26,18 +27,26 @@
 	}
 
 	function render(data) {
+		var rec = data.recommendations && data.recommendations[0];
+		if (!rec || !rec.candidates || !rec.candidates.length) {
+			status.textContent = 'No candidates are available for this task.';
+			return;
+		}
+
 		var html = '';
-		data.suggestions.forEach(function (s, i) {
+		lastRecommendation = rec;
+		rec.candidates.forEach(function (s, i) {
 			var tone = s.score >= 70 ? 'good' : (s.score >= 50 ? 'mid' : 'low');
+			var onTime = Math.round((s.p_on_time || 0) * 100);
 			html += '<div class="assign-row' + (i === 0 ? ' best' : '') + '">' +
 				'<span class="assign-score ' + tone + '" title="Fit score: likelihood of finishing on time plus spare capacity">' + s.score + '</span>' +
 				'<div class="assign-main"><b>' + esc(s.name) + '</b>' + (i === 0 ? ' <span class="label label-primary">Best fit</span>' : '') +
 				(s.limited_history ? ' <span class="label label-default">limited history</span>' : '') +
-				'<div class="assign-meta">' + s.p_late + '% late risk &middot; about ' + s.expected_days + ' days &middot; ' + esc(s.reasons.join(' &middot; ').replace(/&middot;/g, '·')) + '</div></div>' +
+				'<div class="assign-meta">' + onTime + '% on-time &middot; ' + s.open_hours + 'h open &middot; ' + esc((s.reasons || []).join(' · ')) + '</div></div>' +
 				'<button type="button" class="btn btn-default btn-xs" data-owner="' + s.user_id + '">Assign</button></div>';
 		});
 		list.innerHTML = html;
-		status.textContent = 'Model: ' + data.model.late_model + ', AUC ' + data.model.auc + ', trained on ' + data.model.tasks + ' tasks (' + data.model.trained_at + ' UTC).';
+		status.textContent = 'Ranked by the assignment service using on-time history, current load and tag overlap.';
 	}
 
 	btn.addEventListener('click', function () {
@@ -54,6 +63,36 @@
 			.then(function () { btn.disabled = false; });
 	});
 
+	function logAcceptance(ownerId) {
+		var rec = lastRecommendation;
+		if (!rec) { return; }
+		var csrf = document.querySelector('meta[name="csrf-token"]');
+		var base = box.getAttribute('data-url').replace(/\/assign\/suggest$/, '');
+		var chosen = null;
+		(rec.candidates || []).forEach(function (candidate) {
+			if (String(candidate.user_id) === String(ownerId)) { chosen = candidate; }
+		});
+
+		var params = new URLSearchParams();
+		params.set('csrf-token', csrf ? csrf.getAttribute('content') : '');
+		params.set('kind', 'assignment');
+		params.set('action', 'accepted');
+		params.set('issue_id', rec.issue_id || '');
+		params.set('payload', JSON.stringify({
+			issue_id: rec.issue_id || null,
+			selected_user_id: Number(ownerId),
+			selected: chosen,
+			candidates: rec.candidates
+		}));
+
+		fetch(base + '/intelligence/suggestions/log', {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: params.toString()
+		}).catch(function () { /* feedback is best-effort */ });
+	}
+
 	list.addEventListener('click', function (e) {
 		var b = e.target.closest('[data-owner]');
 		if (!b) { return; }
@@ -62,6 +101,7 @@
 			sel.value = b.getAttribute('data-owner');
 			sel.dispatchEvent(new Event('change', { bubbles: true }));
 			status.textContent = 'Assignee set. ' + DEFAULT_HINT;
+			logAcceptance(b.getAttribute('data-owner'));
 		}
 	});
 })();

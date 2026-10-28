@@ -277,15 +277,12 @@ class Analytics extends \Controller
         $this->_requireAdmin();
         $this->validateCsrf();
 
-        [$code, $output] = \Helper\Ml::run('run_analytics.py', '--quiet', 180);
-        if ($code === 0) {
-            // also retrain the smart-assignment model on the latest history
-            [$code2] = \Helper\Ml::run('assign_model.py', 'train --quiet', 180);
-            $f3->set('success', $code2 === 0
-                ? 'Insights and the smart-assignment model were recomputed from the latest task history.'
-                : 'Insights recomputed, but the smart-assignment model could not be retrained.');
+        [$status, $data, $error] = \Helper\Ml::trainAnalytics(true);
+        if ($status >= 200 && $status < 300 && is_array($data) && !empty($data['ok'])) {
+            $f3->set('success', 'Insights and the smart-assignment model were recomputed from the latest task history.');
         } else {
-            $f3->set('error', $code === 127 ? $output[0] : 'The ML job failed: ' . htmlspecialchars(implode(' ', array_slice($output, -3))));
+            $message = $error ?: 'The ML job failed.';
+            $f3->set('error', 'The ML job failed: ' . htmlspecialchars((string) $message));
         }
 
         $this->index($f3);
@@ -637,11 +634,10 @@ class Analytics extends \Controller
             }
         }
 
-        foreach ($team as &$m) {
-            $m['hours'] = round($m['hours']);
+        foreach ($team as $key => $member) {
+            $team[$key]['hours'] = round($member['hours']);
         }
 
-        unset($m);
         usort($team, fn ($a, $b) => $b['open'] <=> $a['open']);
 
         // Weekly flow, last 8 weeks
