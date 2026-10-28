@@ -195,6 +195,22 @@ Known gaps this roadmap closes:
 
 ---
 
+## Complete feature coverage
+
+All **89 items** in [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md) are part of this six-month plan. Priority labels (P0/P1/P2) define execution order, not scope exclusion.
+
+| Backlog category | Items | Main months |
+|---|---:|---|
+| ML models and analytics | 18 | M1–M4 |
+| LLM and copilot | 15 | M3–M4 |
+| Vector embeddings and semantic search | 12 | M2–M4 |
+| Redis queues, workers and real-time | 14 | M1–M2, M5 |
+| JavaScript, UX and product | 16 | M2–M5 |
+| Platform, integrations and enterprise | 14 | M2–M4, M6 |
+| **Total** | **89** | **M1–M6** |
+
+The monthly themes are the delivery order. Every backlog item is mapped to a month and a measurable exit criterion.
+
 ## World-class scorecard
 
 | Dimension | Target by end of semester |
@@ -213,29 +229,30 @@ Known gaps this roadmap closes:
 
 ---
 
-## Priorities and cut lines
+## Priorities and execution order
 
-**P0 — must ship**
+All **89 backlog items are in scope**. P0 ships first, P1 follows, and P2 closes the semester. The lists below are the release gates, not the whole backlog; [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md) is the source of truth.
+
+**P0 — first release gates**
 
 - Real-data evaluation and calibration.
+- Queue/worker foundation and observability.
 - Real-time board with conflict handling.
 - GitHub App and DORA dashboard.
 - LLM copilot with evals and guardrails.
 - Workspaces + SSO + audit log.
-- Load tests, backups and observability.
-- Accessibility pass and user study.
-- v1.0 docs and release.
+- Load tests, backups and accessibility.
+- User study and v1.0 docs.
 
-**P1 — should ship**
+**P1 — next gates**
 
 - GitLab parity, Slack/Teams notifications.
-- Offline/PWA draft queue.
-- Command palette and saved filters.
-- Configurable dashboards and report exports.
-- SCIM and SAML.
-- Model drift alerts.
+- Offline/PWA draft queue and presence.
+- Embedding duplicate detection and hybrid search.
+- Command palette, saved filters and configurable widgets.
+- SCIM, SAML and model drift alerts.
 
-**P2 — stretch**
+**P2 — final gates**
 
 - Plugin marketplace/SDK.
 - Mobile native app.
@@ -243,7 +260,7 @@ Known gaps this roadmap closes:
 - Advanced causal analysis and simulation.
 - Billing/subscription.
 
-If time slips, protect P0 and cut P2 first. Do not cut testing, security, accessibility or the user study — they are the difference between a demo and a world-class product.
+If an external deadline forces a sequencing change, move items later rather than dropping them. Never cut testing, security, accessibility, evaluation or the user study — they are the difference between a demo and a world-class product.
 
 ---
 

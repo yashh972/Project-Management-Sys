@@ -6,7 +6,7 @@ Agile CodeBoard is built on [Phproject](https://github.com/Alanaktion/phproject)
 
 **Runtime:** PHP **8.5.12** (latest security release) · MySQL 8 or SQLite · Python 3.12 · Docker Compose
 
-**Changelog:** [CHANGELOG.md](CHANGELOG.md) · **Next-semester roadmap:** [ROADMAP.md](ROADMAP.md)
+**Changelog:** [CHANGELOG.md](CHANGELOG.md) · **Next-semester roadmap:** [ROADMAP.md](ROADMAP.md) · **Full feature backlog (89 items):** [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md)
 
 ---
 

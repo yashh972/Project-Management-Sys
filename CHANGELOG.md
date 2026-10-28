@@ -113,7 +113,7 @@ The project is a fork of [Phproject](https://github.com/Alanaktion/phproject). T
 - Multi-tenant workspaces, SSO and SCIM.
 - GitLab support and an audit-log UI.
 
-See [ROADMAP.md](ROADMAP.md) for the six-month next-semester plan covering these items, world-class quality criteria, milestones, metrics and risks.
+See [ROADMAP.md](ROADMAP.md) for the six-month plan and [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md) for all **89** scoped feature additions, execution order and dependencies.
 
 ---
 
