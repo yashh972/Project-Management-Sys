@@ -3,21 +3,10 @@
 <head>
     <include href="blocks/head.html" />
     <link rel="stylesheet" href="{{ @BASE }}/css/taskboard.css">
+    <link rel="stylesheet" href="{{ @BASE }}/css/taskboard-modern.css">
     <set columnwidth="160" />
     <check if="{{ !empty(@taskboard[0]) }}">
         <style type="text/css">
-        /* Size columns at multiples of @columnwidth ({{ @columnwidth }}px) */
-{~ foreach(@statuses as @key=>@value): ~}
-        #taskboard table .column-{{ @key + 1 }} {
-            width: {{ @value.taskboard * @columnwidth }}px;
-        }
-{~ endforeach; ~}
-
-        #taskboard table {
-            width: {{ @column_count * $columnwidth + 252 }}px;
-            table-layout: fixed;
-        }
-
         /* Reference images within <base> context */
         #taskboard .completed .spinner {
             background-image: url({{ @BASE }}/img/taskboard/burn.gif);
@@ -139,6 +128,15 @@
                             </ul>
                         </div>
                     </div>
+                    <div class="tb-hint">
+                        Showing
+                        <check if="{{ @filter == 'all' }}"><true>all tasks</true><false>
+                            <check if="{{ @filter == 'me' }}"><true>my tasks</true><false>
+                                <check if="{{ @@filterGroup }}"><true>{{ @filterGroup.name | esc }}</true><false>my groups</false></check>
+                            </false></check>
+                        </false></check>
+                        &middot; drag a card to change its status
+                    </div>
                     <check if="{{ @@filterGroup }}">
                         <button type="button" id="btn-burndown" class="btn btn-default btn-xs" data-toggle="modal" data-target="#burndown-modal">
                             <span class="fa fa-fire"></span> {{ @dict.burndown }}
@@ -146,7 +144,10 @@
                     </check>
                 </th>
                 <repeat group="{{ @statuses }}" key="{{ @key }}" value="{{ @value }}">
-                    <th class="column column-{{ @key + 1 }}">{{ isset(@dict[@value.name]) ? @dict[@value.name] : str_replace('_', ' ', @value.name) }}</th>
+                    <th class="column column-{{ @key + 1 }} tb-status tb-status-{{ @value.id }} {{ @value.closed ? 'is-done' : '' }}">
+                    <span class="tb-dot"></span>{{ isset(@dict[@value.name]) ? @dict[@value.name] : str_replace('_', ' ', @value.name) }}
+                    <span class="tb-count">{{ @status_counts[@key] ?? 0 }}</span>
+                </th>
                 </repeat>
             </tr>
         </table>
@@ -434,6 +435,7 @@
             </script>
             <script src="{{ @BASE }}/js/chart.min.js"></script>
             <script src="{{ @BASE }}/js/taskboard.js"></script>
+            <script src="{{ @BASE }}/js/taskboard-counts.js"></script>
             <script src="{{ @BASE }}/js/burndown.js"></script>
             <script>
                 $(document).ready(function() {
@@ -463,6 +465,7 @@
         </true>
         <false>
             <script src="{{ @BASE }}/js/taskboard.js"></script>
+            <script src="{{ @BASE }}/js/taskboard-counts.js"></script>
         </false>
     </check>
 </body>

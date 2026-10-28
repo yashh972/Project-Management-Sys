@@ -1,6 +1,6 @@
 <set nav="{{ \Helper\Plugin::instance()->getAllNavs(@PATH) }}" />
-<div class="navbar navbar-default navbar-fixed-top" role="navigation">
-    <div class="container-fluid">
+<div class="navbar navbar-default navbar-fixed-top app-sidebar" role="navigation">
+    <div class="app-sidebar-inner">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#nb-collapse">
                 <span class="sr-only">{{ @dict.toggle_navigation }}</span>
@@ -10,7 +10,7 @@
             </button>
             <a class="navbar-brand" href="{{ @BASE }}/" accesskey="h">
                 <check if="{{ empty(@site.logo) }}">
-                    <true>{{ @site.name | esc }}</true>
+                    <true><span class="brand-mark"><img src="{{ @BASE }}/img/logo-glyph.svg" alt="" width="20" height="20"></span><span class="brand-name">{{ @site.name | esc }}</span></true>
                     <false>
                         <img src="{{ @site.logo }}" alt="{{ @site.name | esc }}">
                     </false>
@@ -20,10 +20,17 @@
 
         <div class="collapse navbar-collapse" id="nb-collapse">
 
-            <ul class="nav navbar-nav">
-                <li class="dropdown {{ @menuitem == 'new' ? 'active':'' }}">
+            <form class="navbar-form sb-search" role="search" action="{{ @BASE }}/search" method="get">
+                <span class="fa fa-search sb-search-icon" aria-hidden="true"></span>
+                <input type="search" name="q" class="form-control" placeholder="{{ @dict.issue_search }}" value="{{ @@GET.q | esc }}" aria-label="{{ @dict.issue_search }}">
+                <kbd class="sb-kbd" aria-hidden="true">/</kbd>
+                <button type="submit" class="sr-only">{{ @dict.submit }}</button>
+            </form>
+
+            <ul class="nav navbar-nav sb-primary">
+                <li class="dropdown sb-new {{ @menuitem == 'new' ? 'active':'' }}">
                     <a href="{{ @BASE }}/issues/new" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" accesskey="n">
-                        {{ @dict.new }} <b class="caret"></b>
+                        <span class="fa fa-plus"></span><span class="sb-text">{{ @dict.new }}</span> <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu" role="menu">
                         <repeat group="{{ @issue_types }}" value="{{ @type }}">
@@ -59,9 +66,16 @@
                         </check>
                     </ul>
                 </li>
+                <li class="sb-label" role="presentation">Menu</li>
+                <li class="{{ @PATH == '/' ? 'active':'' }}">
+                    <a href="{{ @BASE }}/"><span class="fa fa-home"></span><span class="sb-text">{{ @dict.dashboard }}</span></a>
+                </li>
+                <li class="{{ @menuitem == 'analytics' ? 'active':'' }}">
+                    <a href="{{ @BASE }}/analytics"><span class="fa fa-line-chart"></span><span class="sb-text">{{ @user.role == 'admin' ? 'Analytics' : 'My Analytics' }}</span></a>
+                </li>
                 <li class="dropdown {{ @menuitem == 'browse' ? 'active':'' }}">
                     <a href="{{ @BASE }}/issues" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" accesskey="b">
-                        {{ @dict.browse }} <b class="caret"></b>
+                        <span class="fa fa-th-list"></span><span class="sb-text">{{ @dict.browse }}</span> <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu" role="menu">
                         <li><a href="{{ @BASE }}/issues/?status=open">{{ @dict.open }}</a></li>
@@ -82,26 +96,26 @@
                     </ul>
                 </li>
                 <li class="{{ @menuitem == 'backlog' ? 'active':'' }}">
-                    <a href="{{ @BASE }}/backlog" accesskey="s">{{ @dict.sprints }}</a>
+                    <a href="{{ @BASE }}/backlog" accesskey="s"><span class="fa fa-bolt"></span><span class="sb-text">{{ @dict.sprints }}</span></a>
                 </li>
                 <repeat group="{{ @nav.root }}" value="{{ @navitem }}">
                     <li class="{{ @navitem.active ? 'active' : '' }}"><a href="{{ @BASE }}/{{ @navitem.href }}">{{ @navitem.title }}</a></li>
                 </repeat>
             </ul>
 
-            <ul class="nav navbar-nav navbar-right">
+            <ul class="nav navbar-nav navbar-right sb-footer">
                 <check if="{{ @user.role=='admin' }}">
                     <li class="{{ @menuitem == 'admin' ? 'active':'' }}">
                         <a href="{{ @BASE }}/admin" accesskey="a">
-                            <span class="hidden-sm">{{ @dict.administration }}</span>
-                            <span class="fa fa-cog visible-sm"></span>
+                            <span class="fa fa-cog"></span><span class="sb-text">{{ @dict.administration }}</span>
                         </a>
                     </li>
                 </check>
-                <li class="dropdown {{ @menuitem == 'user' ? 'active':'' }}">
+                <li class="dropdown sb-user {{ @menuitem == 'user' ? 'active':'' }}">
                     <a href="{{ @BASE }}/user/{{ @user.username }}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" accesskey="u">
-                        <span class="hidden-sm">{{ @user.name | esc }} <b class="caret"></b></span>
-                        <span class="fa fa-user visible-sm"></span>
+                        <img src="{{ @user_obj->avatar(64) | esc }}" class="sb-avatar" alt>
+                        <span class="sb-user-meta"><span class="sb-user-name">{{ @user.name | esc }}</span><span class="sb-user-sub">{{ @user.email | esc }}</span></span>
+                        <span class="fa fa-ellipsis-v sb-user-more"></span>
                     </a>
                     <ul class="dropdown-menu" role="menu">
                         <li><a href="{{ @BASE }}/">{{ @dict.dashboard }}</a></li>
@@ -115,29 +129,15 @@
                         </check>
                         <li role="presentation" class="divider"></li>
                         <li>
-                            <a style="position: relative;">
-                                <form action="{{ @BASE }}/logout" method="post">
-                                    <csrf-token />
-                                    <button type="submit" style="appearance: none; border: none; background: transparent; padding: 0; line-height: inherit;">
-                                        {{ @dict.log_out }}
-                                        <div style="position: absolute; inset: 0;">
-                                    </button>
-                                </form>
-                            </a>
+                            <form action="{{ @BASE }}/logout" method="post" class="sb-logout">
+                                <csrf-token />
+                                <button type="submit"><span class="fa fa-sign-out"></span>{{ @dict.log_out }}</button>
+                            </form>
                         </li>
                     </ul>
                 </li>
             </ul>
 
-            <form class="navbar-form navbar-right" role="search" action="{{ @BASE }}/search" method="get">
-                <div class="form-group">
-                    <input type="search" name="q" class="form-control input-sm" placeholder="{{ @dict.issue_search }}" value="{{ @@GET.q | esc }}">
-                </div>
-                <button type="submit" class="btn btn-default btn-sm hidden-xs">
-                    <span class="sr-only">{{ @dict.submit }}</span>
-                    <span class="fa fa-search"></span>
-                </button>
-            </form>
 
         </div>
     </div>

@@ -23,14 +23,23 @@ $f3->mset([
 ]);
 
 // Load local configuration
-$f3->mset(require_once(__DIR__ . '/config.php'));
+$f3->mset(require_once(is_file(__DIR__ . '/config.php') ? __DIR__ . '/config.php' : $homedir . 'config.php'));
 
 // Connect to database
-$f3->set("db.instance", new \Helper\SQL(
-    "mysql:host=" . $f3->get("db.host") . ";port=3306;dbname=" . $f3->get("db.name"),
-    $f3->get("db.user"),
-    $f3->get("db.pass")
-));
+if ($f3->get("db.engine") === "sqlite") {
+    $dbName = (string) $f3->get("db.name");
+    if (!preg_match('~^([A-Za-z]:|/|\\\\\\\\)~', $dbName)) {
+        $dbName = $homedir . $dbName;
+    }
+
+    $f3->set("db.instance", new \Helper\SQL("sqlite:" . $dbName));
+} else {
+    $f3->set("db.instance", new \Helper\SQL(
+        "mysql:host=" . $f3->get("db.host") . ";port=" . ($f3->get("db.port") ?: 3306) . ";dbname=" . $f3->get("db.name"),
+        $f3->get("db.user"),
+        $f3->get("db.pass")
+    ));
+}
 
 // Load database-backed config
 \Model\Config::loadAll();

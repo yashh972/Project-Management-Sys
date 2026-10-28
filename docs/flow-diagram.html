@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agile CodeBoard Flow</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout concept: a technical field guide. One idea per figure, each with a plain caption. */
+  :root {
+    --bg: #f6f6fb;
+    --surface: #ffffff;
+    --ink: #1d1c2b;
+    --muted: #666580;
+    --line: #cfcfe0;
+    --accent: #5b4de0;
+    --accent-soft: #ecebfd;
+    --ok: #12805a;
+    --ok-soft: #e0f5ec;
+    --warn: #b36b00;
+    --warn-soft: #fdf0d9;
+    --bad: #c23b4a;
+    --font: "DM Sans", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14131d; --surface: #1d1c2b; --ink: #ecebf5; --muted: #a09fba; --line: #3a3950;
+      --accent: #9a8dff; --accent-soft: #2a2748; --ok: #4fd1a1; --ok-soft: #173b2f; --warn: #f0b24a; --warn-soft: #3d2f12; --bad: #ff7b8a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14131d; --surface: #1d1c2b; --ink: #ecebf5; --muted: #a09fba; --line: #3a3950;
+    --accent: #9a8dff; --accent-soft: #2a2748; --ok: #4fd1a1; --ok-soft: #173b2f; --warn: #f0b24a; --warn-soft: #3d2f12; --bad: #ff7b8a;
+    color-scheme: dark;
+  }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font); line-height: 1.55; padding-inline: 16px; padding-block: 32px 64px; }
+  main { max-width: 1040px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.1; margin: 0 0 10px; letter-spacing: -0.02em; text-wrap: balance; }
+  header p { max-width: 62ch; margin: 0; color: var(--muted); font-size: 16px; }
+  nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 0; }
+  nav a { font-family: var(--mono); font-size: 12px; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); text-decoration: none; background: var(--surface); }
+  nav a:hover { border-color: var(--accent); color: var(--accent); }
+  section { margin-top: 44px; }
+  h2 { font-size: 22px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .lead { margin: 0 0 16px; color: var(--muted); max-width: 70ch; }
+  figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .scroll { overflow-x: auto; }
+  svg.fig { display: block; width: 100%; min-width: 760px; height: auto; color: var(--ink); }
+  figcaption { margin-top: 12px; font-size: 14px; color: var(--muted); max-width: 80ch; }
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 16px; }
+  .notes div { border-top: 2px solid var(--accent); padding-top: 8px; font-size: 14px; min-width: 0; }
+  .notes b { display: block; margin-bottom: 2px; }
+  /* svg parts */
+  .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.4; }
+  .box.hl { fill: var(--accent-soft); stroke: var(--accent); }
+  .box.ok { fill: var(--ok-soft); stroke: var(--ok); }
+  .box.warn { fill: var(--warn-soft); stroke: var(--warn); }
+  .lane { fill: none; stroke: var(--line); stroke-dasharray: 5 5; stroke-width: 1.2; }
+  .ln { stroke: currentColor; stroke-width: 1.6; fill: none; }
+  .ln.dash { stroke-dasharray: 6 4; }
+  .ln.acc { stroke: var(--accent); }
+  text { fill: currentColor; font-family: var(--font); font-size: 13px; }
+  .t-h { font-weight: 700; font-size: 14px; }
+  .t-s { font-size: 12px; fill: var(--muted); }
+  .t-m { font-family: var(--mono); font-size: 11.5px; fill: var(--muted); }
+  .t-a { fill: var(--accent); font-weight: 600; }
+  .t-ok { fill: var(--ok); font-weight: 600; }
+  .t-bad { fill: var(--bad); font-weight: 600; }
+  .arrowfill { fill: currentColor; }
+</style>
+
+</head>
+<body>
+<main>
+  <header>
+    <h1>Agile CodeBoard: how it fits together</h1>
+    <p>Five pictures of the running system: where data lives, how a task moves, who sees what, how the ML job turns history into scores, and what happens when you press "Suggest assignee".</p>
+    <nav aria-label="Figures">
+      <a href="#system">1 System</a><a href="#lifecycle">2 Task lifecycle</a><a href="#access">3 Access</a><a href="#ml">4 ML job</a><a href="#assign">5 Smart assignment</a>
+    </nav>
+  </header>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowfill"/></marker>
+      <marker id="arrow-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill: var(--accent)"/></marker>
+    </defs>
+  </svg>
+
+  <!-- ===================== 1 SYSTEM -->
+  <section id="system">
+    <h2>1. System: one database, two programs that read it</h2>
+    <p class="lead">The PHP app serves every page. A separate Python program reads the same SQLite file in batches and writes scores back into it. The pages never run the models themselves, except the assignment suggestion, which starts Python on demand.</p>
+    <figure>
+      <div class="scroll">
+      <svg class="fig" viewBox="0 0 960 540" role="img" aria-label="People use browser pages, which call the PHP app. The app reads and writes one SQLite database. Python ML scripts read task history from the database and write score tables back. Cron runs the scripts and sends alert emails.">
+        <rect class="box" x="20" y="200" width="150" height="120" rx="10"/>
+        <text class="t-h" x="95" y="228" text-anchor="middle">People</text>
+        <text class="t-s" x="95" y="252" text-anchor="middle">Admin (1)</text>
+        <text class="t-s" x="95" y="270" text-anchor="middle">Managers, users,</text>
+        <text class="t-s" x="95" y="288" text-anchor="middle">clients (12)</text>
+
+        <rect class="box" x="225" y="50" width="180" height="330" rx="10"/>
+        <text class="t-h" x="315" y="78" text-anchor="middle">Pages in the browser</text>
+        <text x="315" y="112" text-anchor="middle">Dashboard</text>
+        <text x="315" y="142" text-anchor="middle">Browse issues</text>
+        <text x="315" y="172" text-anchor="middle">Issue form</text>
+        <text x="315" y="202" text-anchor="middle">Sprints (backlog)</text>
+        <text x="315" y="232" text-anchor="middle">Taskboard</text>
+        <text class="t-a" x="315" y="262" text-anchor="middle">Analytics</text>
+        <text x="315" y="292" text-anchor="middle">Admin</text>
+        <text class="t-s" x="315" y="340" text-anchor="middle">calendar, charts and the</text>
+        <text class="t-s" x="315" y="358" text-anchor="middle">suggest button run in JS</text>
+
+        <rect class="box hl" x="470" y="100" width="190" height="250" rx="10"/>
+        <text class="t-h" x="565" y="128" text-anchor="middle">PHP app (Fat-Free)</text>
+        <text class="t-m" x="565" y="156" text-anchor="middle">issues, backlog, taskboard</text>
+        <text class="t-m" x="565" y="176" text-anchor="middle">user, admin, files</text>
+        <text class="t-m t-a" x="565" y="204" text-anchor="middle">analytics (scoped by role)</text>
+        <text class="t-m t-a" x="565" y="224" text-anchor="middle">assign (suggest)</text>
+        <text class="t-m" x="565" y="252" text-anchor="middle">REST API (.json)</text>
+        <text class="t-s" x="565" y="300" text-anchor="middle">checks login and role</text>
+        <text class="t-s" x="565" y="318" text-anchor="middle">on every request</text>
+
+        <rect class="box" x="735" y="100" width="205" height="250" rx="10"/>
+        <text class="t-h" x="837" y="128" text-anchor="middle">phproject.db</text>
+        <text class="t-m" x="837" y="148" text-anchor="middle">SQLite</text>
+        <text class="t-s" x="837" y="176" text-anchor="middle">Task data</text>
+        <text class="t-m" x="837" y="196" text-anchor="middle">issue, issue_update</text>
+        <text class="t-m" x="837" y="214" text-anchor="middle">comments, sprints, tags</text>
+        <text class="t-m" x="837" y="232" text-anchor="middle">users, sessions, config</text>
+        <line class="lane" x1="750" y1="252" x2="925" y2="252"/>
+        <text class="t-s t-a" x="837" y="276" text-anchor="middle">ML results</text>
+        <text class="t-m" x="837" y="296" text-anchor="middle">employee_performance</text>
+        <text class="t-m" x="837" y="314" text-anchor="middle">task_risk, ml_run</text>
+        <text class="t-m" x="837" y="332" text-anchor="middle">assign_model_run</text>
+
+        <rect class="box ok" x="470" y="410" width="250" height="110" rx="10"/>
+        <text class="t-h" x="595" y="438" text-anchor="middle">Python ML (ml/)</text>
+        <text class="t-m" x="595" y="462" text-anchor="middle">run_analytics.py</text>
+        <text class="t-m" x="595" y="482" text-anchor="middle">assign_model.py (+ saved model)</text>
+
+        <rect class="box warn" x="225" y="410" width="190" height="110" rx="10"/>
+        <text class="t-h" x="320" y="438" text-anchor="middle">Schedule (cron)</text>
+        <text class="t-m" x="320" y="462" text-anchor="middle">task_alerts.php</text>
+        <text class="t-s" x="320" y="482" text-anchor="middle">emails owners</text>
+        <text class="t-s" x="320" y="500" text-anchor="middle">(needs mail.from)</text>
+
+        <line class="ln" x1="170" y1="260" x2="225" y2="260" marker-end="url(#arrow)"/>
+        <text class="t-s" x="197" y="250" text-anchor="middle">use</text>
+
+        <line class="ln" x1="405" y1="200" x2="470" y2="200" marker-end="url(#arrow)"/>
+        <text class="t-s" x="437" y="190" text-anchor="middle">request</text>
+        <line class="ln dash" x1="470" y1="250" x2="405" y2="250" marker-end="url(#arrow)"/>
+        <text class="t-s" x="437" y="268" text-anchor="middle">page</text>
+
+        <line class="ln" x1="660" y1="170" x2="735" y2="170" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+        <text class="t-s" x="697" y="160" text-anchor="middle">read, write</text>
+
+        <line class="ln acc" x1="565" y1="350" x2="565" y2="410" marker-end="url(#arrow-acc)"/>
+        <text class="t-s" x="575" y="376">runs scripts on</text>
+        <text class="t-s" x="575" y="392">demand</text>
+
+        <polyline class="ln acc" points="720,465 790,465 790,350" marker-start="url(#arrow-acc)" marker-end="url(#arrow-acc)"/>
+        <text class="t-s" x="800" y="400">reads history,</text>
+        <text class="t-s" x="800" y="418">writes results</text>
+
+        <line class="ln dash" x1="415" y1="460" x2="470" y2="460" marker-end="url(#arrow)"/>
+        <text class="t-s" x="441" y="450" text-anchor="middle">nightly</text>
+      </svg>
+      </div>
+      <figcaption>Solid arrows are live requests. Dashed arrows are scheduled or returned data. The violet arrow is the only place the app starts Python: "Recompute insights" and "Suggest assignee".</figcaption>
+    </figure>
+  </section>
+
+  <!-- ===================== 2 LIFECYCLE -->
+  <section id="lifecycle">
+    <h2>2. A task from creation to done</h2>
+    <p class="lead">Every status change writes a history row with the time and the person. The ML job reads those rows to learn when work started and whether it was reopened.</p>
+    <figure>
+      <div class="scroll">
+      <svg class="fig" viewBox="0 0 960 300" role="img" aria-label="A task starts as New, becomes Active when someone starts it, and ends as Completed. Active can go On Hold and back. A Completed task can be reopened to Active. Each step is recorded in the history.">
+        <rect class="box" x="20" y="90" width="150" height="70" rx="35"/>
+        <text class="t-h" x="95" y="120" text-anchor="middle">New</text>
+        <text class="t-s" x="95" y="140" text-anchor="middle">created, in a sprint</text>
+
+        <rect class="box hl" x="330" y="90" width="150" height="70" rx="35"/>
+        <text class="t-h" x="405" y="120" text-anchor="middle">Active</text>
+        <text class="t-s" x="405" y="140" text-anchor="middle">being worked on</text>
+
+        <rect class="box ok" x="780" y="90" width="150" height="70" rx="35"/>
+        <text class="t-h" x="855" y="120" text-anchor="middle">Completed</text>
+        <text class="t-s" x="855" y="140" text-anchor="middle">closed date set</text>
+
+        <rect class="box warn" x="330" y="210" width="150" height="62" rx="31"/>
+        <text class="t-h" x="405" y="238" text-anchor="middle">On Hold</text>
+        <text class="t-s" x="405" y="256" text-anchor="middle">blocked or paused</text>
+
+        <line class="ln" x1="170" y1="125" x2="330" y2="125" marker-end="url(#arrow)"/>
+        <text class="t-s" x="250" y="114" text-anchor="middle">owner starts it</text>
+        <text class="t-m" x="250" y="146" text-anchor="middle">status 1 to 2</text>
+
+        <line class="ln" x1="480" y1="125" x2="780" y2="125" marker-end="url(#arrow)"/>
+        <text class="t-s" x="630" y="114" text-anchor="middle">owner finishes it</text>
+        <text class="t-m" x="630" y="146" text-anchor="middle">status 2 to 3, hours left = 0</text>
+
+        <path class="ln" d="M430,160 C430,185 430,190 430,210" marker-end="url(#arrow)"/>
+        <path class="ln dash" d="M380,210 L380,160" marker-end="url(#arrow)"/>
+
+        <path class="ln dash" d="M855,90 C855,30 405,30 405,90" marker-end="url(#arrow)"/>
+        <text class="t-bad" x="630" y="44" text-anchor="middle">reopened</text>
+        <text class="t-s" x="630" y="62" text-anchor="middle">counts against quality in the score</text>
+
+        <rect class="box" x="560" y="200" width="370" height="80" rx="10"/>
+        <text class="t-h" x="575" y="224">What gets recorded</text>
+        <text class="t-s" x="575" y="246">issue_update: who, when, which fields changed</text>
+        <text class="t-s" x="575" y="264">comments: stored separately, merged into the feed</text>
+      </svg>
+      </div>
+      <figcaption>"On time" means closed on or before the due date. Time between New and Active is the queue; time between Active and Completed is the cycle, which is what the speed measure uses.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ===================== 3 ACCESS -->
+  <section id="access">
+    <h2>3. Who sees what</h2>
+    <p class="lead">One analytics address serves everyone. The controller decides the scope once, at the start, and every query after that follows it.</p>
+    <figure>
+      <div class="scroll">
+      <svg class="fig" viewBox="0 0 960 400" role="img" aria-label="After login, the analytics controller checks the role. Admins get all tasks and six tabs including team, performance and compare, plus recompute, email and admin pages. Everyone else gets only tasks owned by them, three tabs, and exports of their own data.">
+        <rect class="box" x="20" y="165" width="150" height="70" rx="10"/>
+        <text class="t-h" x="95" y="195" text-anchor="middle">Log in</text>
+        <text class="t-s" x="95" y="215" text-anchor="middle">/login</text>
+
+        <polygon class="box hl" points="290,200 370,150 450,200 370,250"/>
+        <text class="t-h" x="370" y="196" text-anchor="middle">role =</text>
+        <text class="t-h" x="370" y="214" text-anchor="middle">admin?</text>
+
+        <rect class="box ok" x="540" y="30" width="400" height="150" rx="10"/>
+        <text class="t-h" x="560" y="58">Admin: scope = everything</text>
+        <text class="t-s" x="560" y="82">All tasks, all projects, all people</text>
+        <text class="t-s" x="560" y="102">Tabs: Overview, Projects, Alerts, Team,</text>
+        <text class="t-s" x="560" y="120">Performance, Compare</text>
+        <text class="t-s" x="560" y="142">Recompute insights, email alert digests</text>
+        <text class="t-s" x="560" y="160">/admin: users, groups, sprints, settings</text>
+
+        <rect class="box" x="540" y="220" width="400" height="150" rx="10"/>
+        <text class="t-h" x="560" y="248">Everyone else: scope = my tasks</text>
+        <text class="t-s" x="560" y="272">Only tasks where owner = me, and the</text>
+        <text class="t-s" x="560" y="290">projects those tasks belong to</text>
+        <text class="t-s" x="560" y="312">Tabs: Overview, Projects, Alerts</text>
+        <text class="t-s" x="560" y="334">Exports and activity limited to my data</text>
+        <text class="t-s" x="560" y="352">Team data and other people's scores: hidden</text>
+
+        <line class="ln" x1="170" y1="200" x2="290" y2="200" marker-end="url(#arrow)"/>
+        <polyline class="ln acc" points="450,200 495,200 495,105 540,105" marker-end="url(#arrow-acc)"/>
+        <text class="t-a" x="508" y="150">yes</text>
+        <polyline class="ln" points="370,250 370,295 540,295" marker-end="url(#arrow)"/>
+        <text class="t-s" x="378" y="280">no</text>
+      </svg>
+      </div>
+      <figcaption>Roles have ranks too (client 1, user 2, manager 3, admin 5). A manager can drag projects between sprints on the Sprints page, but still falls on the "no" branch here.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ===================== 4 ML JOB -->
+  <section id="ml">
+    <h2>4. The ML job: history in, scores out</h2>
+    <p class="lead">It learns what is normal for a task without looking at who did it, then compares each person with that. That is why someone handed hard work isn't ranked below someone handed easy work.</p>
+    <figure>
+      <div class="scroll">
+      <svg class="fig" viewBox="0 0 960 470" role="img" aria-label="Closed tasks feed two models that learn expected lateness and cycle time without knowing the assignee. Employees are compared against those expectations to produce a score and a behaviour group. The same late model scores every open task. Results are written to three tables read by the Performance, Compare, Alerts and Overview views.">
+        <rect class="box" x="20" y="40" width="170" height="90" rx="10"/>
+        <text class="t-h" x="105" y="68" text-anchor="middle">Closed tasks</text>
+        <text class="t-s" x="105" y="90" text-anchor="middle">hours, priority, bug?,</text>
+        <text class="t-s" x="105" y="108" text-anchor="middle">days allowed, queue time</text>
+
+        <rect class="box hl" x="270" y="20" width="230" height="64" rx="10"/>
+        <text class="t-h" x="385" y="46" text-anchor="middle">Late-risk model</text>
+        <text class="t-s" x="385" y="66" text-anchor="middle">P(finishes after due date)</text>
+        <rect class="box hl" x="270" y="100" width="230" height="64" rx="10"/>
+        <text class="t-h" x="385" y="126" text-anchor="middle">Cycle-time model</text>
+        <text class="t-s" x="385" y="146" text-anchor="middle">expected days start to done</text>
+        <text class="t-m" x="385" y="184" text-anchor="middle">never sees the assignee</text>
+
+        <rect class="box" x="580" y="40" width="190" height="90" rx="10"/>
+        <text class="t-h" x="675" y="68" text-anchor="middle">Judge each person</text>
+        <text class="t-s" x="675" y="90" text-anchor="middle">actual vs expected</text>
+        <text class="t-s" x="675" y="108" text-anchor="middle">5 measures, 0-100 score</text>
+
+        <rect class="box ok" x="810" y="40" width="130" height="90" rx="10"/>
+        <text class="t-h" x="875" y="68" text-anchor="middle">Score, rank</text>
+        <text class="t-s" x="875" y="90" text-anchor="middle">+ behaviour</text>
+        <text class="t-s" x="875" y="108" text-anchor="middle">group</text>
+
+        <line class="ln" x1="190" y1="70" x2="270" y2="52" marker-end="url(#arrow)"/>
+        <line class="ln" x1="190" y1="100" x2="270" y2="130" marker-end="url(#arrow)"/>
+        <line class="ln" x1="500" y1="52" x2="580" y2="70" marker-end="url(#arrow)"/>
+        <line class="ln" x1="500" y1="132" x2="580" y2="102" marker-end="url(#arrow)"/>
+        <line class="ln" x1="770" y1="85" x2="810" y2="85" marker-end="url(#arrow)"/>
+
+        <rect class="box" x="20" y="250" width="170" height="90" rx="10"/>
+        <text class="t-h" x="105" y="278" text-anchor="middle">Open tasks</text>
+        <text class="t-s" x="105" y="300" text-anchor="middle">same features, plus</text>
+        <text class="t-s" x="105" y="318" text-anchor="middle">owner record and load</text>
+
+        <rect class="box hl" x="270" y="250" width="230" height="90" rx="10"/>
+        <text class="t-h" x="385" y="278" text-anchor="middle">Late-risk for open work</text>
+        <text class="t-s" x="385" y="300" text-anchor="middle">uses the owner's recent</text>
+        <text class="t-s" x="385" y="318" text-anchor="middle">on-time rate and open load</text>
+
+        <rect class="box ok" x="580" y="250" width="190" height="90" rx="10"/>
+        <text class="t-h" x="675" y="278" text-anchor="middle">task_risk</text>
+        <text class="t-s" x="675" y="300" text-anchor="middle">one probability</text>
+        <text class="t-s" x="675" y="318" text-anchor="middle">per open task</text>
+
+        <line class="ln" x1="190" y1="295" x2="270" y2="295" marker-end="url(#arrow)"/>
+        <line class="ln" x1="500" y1="295" x2="580" y2="295" marker-end="url(#arrow)"/>
+
+        <line class="lane" x1="20" y1="215" x2="940" y2="215"/>
+        <text class="t-m" x="20" y="208">learn from the past</text>
+        <text class="t-m" x="20" y="236">score the present</text>
+
+        <polyline class="ln dash acc" points="875,130 875,190 875,400" marker-end="url(#arrow-acc)"/>
+        <polyline class="ln dash acc" points="675,340 675,400" marker-end="url(#arrow-acc)"/>
+
+        <rect class="box" x="570" y="400" width="370" height="56" rx="10"/>
+        <text class="t-h" x="585" y="424">Read by the Analytics tabs</text>
+        <text class="t-s" x="585" y="442">Performance, Compare, Alerts, project status, calendar badges</text>
+        <text class="t-m" x="20" y="430">employee_performance + task_risk + ml_run</text>
+        <text class="t-s" x="20" y="448">Fewer than 8 closed tasks: no score. Small samples are pulled toward the team average.</text>
+      </svg>
+      </div>
+      <figcaption>Score weights: reliability 35%, speed 25%, quality 15%, estimation 10%, volume 15%. Late-risk quality on the demo data is AUC 0.68 (0.5 would be guessing), so treat scores as signals for a manager to look into, not as verdicts.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ===================== 5 ASSIGN -->
+  <section id="assign">
+    <h2>5. What happens when you press "Suggest assignee"</h2>
+    <p class="lead">The only moment a page triggers Python. It takes about three seconds, which is why the button shows a progress message.</p>
+    <figure>
+      <div class="scroll">
+      <svg class="fig" viewBox="0 0 960 440" role="img" aria-label="Sequence: the issue form collects type, hours, priority, due date and hashtags and calls the assign endpoint. PHP checks login and starts the Python script. For each team member the script rebuilds their record, workload and similar-work history, predicts late risk and days, scores them, and returns a ranked list. The form shows scores with reasons and an Assign button that fills the owner field.">
+        <line class="lane" x1="110" y1="60" x2="110" y2="420"/>
+        <line class="lane" x1="360" y1="60" x2="360" y2="420"/>
+        <line class="lane" x1="610" y1="60" x2="610" y2="420"/>
+        <line class="lane" x1="850" y1="60" x2="850" y2="420"/>
+
+        <rect class="box hl" x="30" y="14" width="160" height="40" rx="8"/><text class="t-h" x="110" y="39" text-anchor="middle">Issue form</text>
+        <rect class="box hl" x="280" y="14" width="160" height="40" rx="8"/><text class="t-h" x="360" y="39" text-anchor="middle">PHP /assign/suggest</text>
+        <rect class="box hl" x="530" y="14" width="160" height="40" rx="8"/><text class="t-h" x="610" y="39" text-anchor="middle">assign_model.py</text>
+        <rect class="box hl" x="770" y="14" width="160" height="40" rx="8"/><text class="t-h" x="850" y="39" text-anchor="middle">Database + model</text>
+
+        <line class="ln" x1="110" y1="90" x2="360" y2="90" marker-end="url(#arrow)"/>
+        <text class="t-s" x="235" y="80" text-anchor="middle">type, hours, priority, due, #tags</text>
+
+        <path class="ln" d="M360,120 h-12 v22 h12" marker-end="url(#arrow)"/>
+        <text class="t-s" x="372" y="134">logged in? clean the inputs</text>
+
+        <line class="ln" x1="360" y1="170" x2="610" y2="170" marker-end="url(#arrow)"/>
+        <text class="t-s" x="485" y="160" text-anchor="middle">start Python (about 3 s)</text>
+
+        <line class="ln dash" x1="610" y1="205" x2="850" y2="205" marker-end="url(#arrow)"/>
+        <text class="t-s" x="730" y="195" text-anchor="middle">load history, open tasks, saved model</text>
+
+        <rect class="box" x="480" y="225" width="260" height="100" rx="10"/>
+        <text class="t-h" x="495" y="248">For each person:</text>
+        <text class="t-s" x="495" y="268">record, open hours, similar-work history</text>
+        <text class="t-s" x="495" y="286">predict late risk and days</text>
+        <text class="t-a" x="495" y="308">score = 60% on-time + 40% spare capacity</text>
+
+        <line class="ln" x1="610" y1="345" x2="360" y2="345" marker-end="url(#arrow)"/>
+        <text class="t-s" x="485" y="335" text-anchor="middle">ranked JSON, top 5</text>
+
+        <line class="ln" x1="360" y1="375" x2="110" y2="375" marker-end="url(#arrow)"/>
+        <text class="t-s" x="235" y="365" text-anchor="middle">same list</text>
+
+        <rect class="box ok" x="30" y="392" width="300" height="42" rx="8"/>
+        <text class="t-s" x="42" y="410">Cards: score, risk, days, reasons.</text>
+        <text class="t-ok" x="42" y="426">Click Assign to fill the owner.</text>
+      </svg>
+      </div>
+      <figcaption>A person with fewer than 3 closed tasks loses 15 points and is marked "limited history", so an empty record can't beat a proven one. The model only ranks; a person still picks the assignee and saves the form.</figcaption>
+    </figure>
+    <div class="notes">
+      <div><b>Capacity</b>40 hours of open work per person is treated as full.</div>
+      <div><b>Retraining</b>"Recompute insights" on Analytics retrains this model together with the scores.</div>
+      <div><b>Candidates</b>Only accounts with the user role. Admins and groups are never suggested.</div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

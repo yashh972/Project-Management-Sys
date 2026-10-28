@@ -1,0 +1,4 @@
+/* Tailwind source. Build with `npm run build:css` -> css/tailwind.css (committed). */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

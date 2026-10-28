@@ -112,6 +112,10 @@ class Backlog extends \Controller
                 $unsorted[] = $p;
             }
         }
+        // Projects nobody has dragged into a position yet (every new project) belong in the backlog too
+        $backlog = array_merge($backlog, $unsorted);
+        $unsorted = [];
+
 
         $user = new \Model\User();
         $f3->set("groups", $user->getAllGroups());

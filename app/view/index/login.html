@@ -3,114 +3,172 @@
 <head>
     <include href="blocks/head.html" />
 </head>
-<body class="login">
+<body class="login auth tw-font-sans">
 
-<h1 class="h2 text-center">
-    <a href="{{ @BASE }}/" class="nolink">
-        <check if="{{ empty(@site.logo) }}">
-            <true>{{ @site.name | esc }}</true>
-            <false>
-                <img src="{{ @site.logo }}" alt="{{ @site.name | esc }}">
-            </false>
-        </check>
-    </a>
-</h1>
+<set show_register="{{ @site.public_registration && (!empty(@register.error) || !empty(@POST['register-name'])) }}" />
 
-<br><br>
+<div class="tw-grid tw-min-h-screen lg:tw-grid-cols-2">
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-4 {{ @site.public_registration ? 'col-sm-offset-2' : 'col-sm-offset-4' }}">
-            <form action="{{ @BASE }}/login" method="post" class="form-horizontal">
-                <csrf-token />
-                <div class="clearfix">
-                    <h3 class="col-md-8 col-md-offset-4">{{ @dict.log_in }}</h3>
-                </div>
-                <input type="hidden" name="to" value="{{ (empty(@to) ? '/' : @to) | esc }}">
-                <check if="{{ !empty(@login.error) }}">
-                    <p class="alert alert-danger">{{ @login.error }}</p>
-                </check>
-                <div class="form-group">
-                    <label for="username" class="col-md-4 control-label">{{ @dict.username }}</label>
-                    <div class="col-md-8">
-                        <check if="{{ !empty(@POST.username) }}">
-                            <true>
-                                <input class="form-control" placeholder="{{ @dict.username }}" id="username" name="username" type="text" value="{{ @POST.username | esc }}" required>
-                            </true>
-                            <false>
-                                <input class="form-control" placeholder="{{ @dict.username }}" id="username" name="username" type="text" required autofocus>
-                            </false>
-                        </check>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="password" class="col-md-4 control-label">{{ @dict.password }}</label>
-                    <div class="col-md-8">
-                        <check if="{{ !empty(@POST.username) }}">
-                            <true>
-                                <input class="form-control" placeholder="{{ @dict.password }}" id="password" name="password" type="password" required autofocus>
-                            </true>
-                            <false>
-                                <input class="form-control" placeholder="{{ @dict.password }}" id="password" name="password" type="password" required>
-                            </false>
-                        </check>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="col-lg-8 col-lg-offset-4">
-                        <button type="submit" class="btn btn-primary">{{ @dict.log_in }}</button>
-                        <a href="{{ @BASE }}/reset" class="btn btn-link">{{ @dict.reset_password }}</a>
-                    </div>
-                </div>
-            </form>
-            {~ \Helper\Plugin::instance()->callHook('render.login.after_login') ~}
+    <!-- Brand panel -->
+    <aside class="auth-hero tw-relative tw-hidden tw-flex-col tw-justify-between tw-overflow-hidden tw-p-14 tw-text-white lg:tw-flex" aria-hidden="true">
+        <div class="tw-relative tw-z-10 tw-flex tw-items-center tw-gap-3 tw-text-[17px] tw-font-semibold tw-tracking-tight">
+            <span class="brand-mark"><img src="{{ @BASE }}/img/logo-glyph.svg" alt="" width="20" height="20"></span>
+            <span>{{ @site.name | esc }}</span>
         </div>
-        <check if="{{ @site.public_registration }}">
-            <div class="col-sm-4">
-                <form action="{{ @BASE }}/register" method="post" class="form-horizontal">
-                    <csrf-token />
-                    <div class="clearfix">
-                        <h3 class="col-md-8 col-md-offset-4">{{ @dict.register }}</h3>
-                    </div>
-                    <input type="hidden" name="to" value="{{ empty(@to) ? '/' : @to }}">
-                    <check if="{{ !empty(@register.error) }}">
-                        <p class="alert alert-danger">{{ @register.error | raw }}</p>
-                    </check>
-                    <div class="form-group">
-                        <label for="register-name" class="col-md-4 control-label">{{ @dict.name }}</label>
-                        <div class="col-md-8">
-                            <input class="form-control" placeholder="{{ @dict.name }}" id="register-name" name="register-name" type="text" value="{{ @@POST['register-name'] | esc }}" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="register-username" class="col-md-4 control-label">{{ @dict.username }}</label>
-                        <div class="col-md-8">
-                            <input class="form-control" placeholder="{{ @dict.username }}" id="register-username" name="register-username" type="text" value="{{ @@POST['register-username'] | esc }}" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="register-email" class="col-md-4 control-label">{{ @dict.email_address }}</label>
-                        <div class="col-md-8">
-                            <input class="form-control" placeholder="{{ @dict.email }}" id="register-email" name="register-email" type="text" required autofocus>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="register-password" class="col-md-4 control-label">{{ @dict.password }}</label>
-                        <div class="col-md-8">
-                            <input class="form-control" placeholder="{{ @dict.password }}" id="register-username" name="register-password" type="password" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="col-lg-8 col-lg-offset-4">
-                            <button type="submit" class="btn btn-primary">{{ @dict.register }}</button>
-                        </div>
-                    </div>
-                </form>
+
+        <div class="tw-relative tw-z-10 tw-max-w-md">
+            <h2 class="tw-mb-4 tw-text-[38px] tw-font-semibold tw-leading-[1.12] tw-tracking-tighter tw-text-white">{{ !empty(@site.description) ? @site.description : 'Plan, track and ship your work in one place.' | esc }}</h2>
+            <p class="tw-m-0 tw-text-[15px] tw-text-white/75">{{ @site.name | esc }}</p>
+        </div>
+
+        <div class="tw-relative tw-z-10 tw-h-52 tw-max-w-md">
+            <div class="tw-absolute tw-left-0 tw-top-0 tw-w-80 tw-rounded-[18px] tw-bg-white/95 tw-p-5 tw-text-[#15161f] tw-shadow-2xl">
+                <div class="tw-flex tw-items-center tw-justify-between tw-text-[12.5px]">
+                    <span class="badge status" data-status="active">Active</span>
+                    <span class="tw-text-[#8a8da2]">Sprint 12</span>
+                </div>
+                <div class="tw-mb-3 tw-mt-2.5 tw-text-[14.5px] tw-font-semibold">Checkout page redesign</div>
+                <div class="tw-mb-2.5 tw-h-1.5 tw-overflow-hidden tw-rounded-full tw-bg-[#eceef4]">
+                    <span class="tw-block tw-h-full tw-w-[68%] tw-rounded-full tw-bg-gradient-to-r tw-from-[#ec6bd0] tw-via-[#6d5df6] tw-to-[#5b8dff]"></span>
+                </div>
+                <div class="tw-flex tw-justify-between tw-text-[12.5px] tw-text-[#8a8da2]"><span>16 of 24 tasks done</span><b class="tw-text-[#15161f]">68%</b></div>
             </div>
-        </check>
-    </div>
+            <div class="tw-absolute tw-bottom-0 tw-right-0 tw-flex tw-items-center tw-gap-3 tw-rounded-[18px] tw-bg-white/95 tw-px-[18px] tw-py-3.5 tw-text-[#15161f] tw-shadow-2xl">
+                <span class="tw-flex tw-h-[34px] tw-w-[34px] tw-items-center tw-justify-center tw-rounded-full tw-bg-[#e5f7ee] tw-text-[#12a05c]"><span class="fa fa-check"></span></span>
+                <span>
+                    <span class="tw-block tw-text-[14.5px] tw-font-semibold">Release shipped</span>
+                    <span class="tw-block tw-text-[12.5px] tw-text-[#8a8da2]">2 minutes ago</span>
+                </span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Form panel -->
+    <main class="tw-flex tw-items-center tw-justify-center tw-bg-surface tw-px-7 tw-py-10">
+        <div class="tw-w-full tw-max-w-[400px]">
+
+            <a href="{{ @BASE }}/" class="nolink tw-mb-8 tw-inline-flex tw-items-center tw-gap-2.5 tw-text-lg tw-font-semibold tw-tracking-tight lg:tw-hidden">
+                <check if="{{ empty(@site.logo) }}">
+                    <true><span class="brand-mark"><img src="{{ @BASE }}/img/logo-glyph.svg" alt="" width="20" height="20"></span><span>{{ @site.name | esc }}</span></true>
+                    <false><img src="{{ @site.logo }}" alt="{{ @site.name | esc }}" class="tw-h-9"></false>
+                </check>
+            </a>
+
+            <section id="auth-login" class="auth-pane" {{ @show_register ? 'hidden' : '' }}>
+                <h1 class="tw-mb-1.5 tw-text-[28px] tw-font-semibold tw-tracking-tight">{{ @dict.log_in }}</h1>
+                <p class="tw-mb-7 tw-text-sm tw-text-ink-3">{{ @site.name | esc }}</p>
+
+                <form action="{{ @BASE }}/login" method="post">
+                    <csrf-token />
+                    <input type="hidden" name="to" value="{{ (empty(@to) ? '/' : @to) | esc }}">
+                    <check if="{{ !empty(@login.error) }}">
+                        <p class="alert alert-danger" role="alert">{{ @login.error }}</p>
+                    </check>
+                    <div class="tw-mb-[18px]">
+                        <label for="username" class="control-label">{{ @dict.username }}</label>
+                        <check if="{{ !empty(@POST.username) }}">
+                            <true>
+                                <input class="form-control" placeholder="{{ @dict.username }}" id="username" name="username" type="text" value="{{ @POST.username | esc }}" autocomplete="username" required>
+                            </true>
+                            <false>
+                                <input class="form-control" placeholder="{{ @dict.username }}" id="username" name="username" type="text" autocomplete="username" required autofocus>
+                            </false>
+                        </check>
+                    </div>
+                    <div class="tw-mb-[18px]">
+                        <div class="tw-flex tw-items-baseline tw-justify-between">
+                            <label for="password" class="control-label">{{ @dict.password }}</label>
+                            <a href="{{ @BASE }}/reset" class="tw-text-[12.5px] tw-font-medium">{{ @dict.reset_password }}</a>
+                        </div>
+                        <div class="tw-relative">
+                            <check if="{{ !empty(@POST.username) }}">
+                                <true>
+                                    <input class="form-control tw-pr-11" placeholder="{{ @dict.password }}" id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+                                </true>
+                                <false>
+                                    <input class="form-control tw-pr-11" placeholder="{{ @dict.password }}" id="password" name="password" type="password" autocomplete="current-password" required>
+                                </false>
+                            </check>
+                            <button type="button" class="auth-reveal" data-reveal="password" aria-label="Show password"><span class="fa fa-eye"></span></button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg btn-block tw-mt-2">{{ @dict.log_in }}</button>
+                </form>
+                {~ \Helper\Plugin::instance()->callHook('render.login.after_login') ~}
+
+                <check if="{{ @site.public_registration }}">
+                    <p class="tw-mt-6 tw-text-center tw-text-[13.5px]">
+                        <a href="#auth-register" class="tw-font-semibold" data-auth-switch="auth-register">{{ @dict.register }} &rarr;</a>
+                    </p>
+                </check>
+            </section>
+
+            <check if="{{ @site.public_registration }}">
+                <section id="auth-register" class="auth-pane" {{ @show_register ? '' : 'hidden' }}>
+                    <h1 class="tw-mb-1.5 tw-text-[28px] tw-font-semibold tw-tracking-tight">{{ @dict.register }}</h1>
+                    <p class="tw-mb-7 tw-text-sm tw-text-ink-3">{{ @site.name | esc }}</p>
+
+                    <form action="{{ @BASE }}/register" method="post">
+                        <csrf-token />
+                        <input type="hidden" name="to" value="{{ empty(@to) ? '/' : @to }}">
+                        <check if="{{ !empty(@register.error) }}">
+                            <p class="alert alert-danger" role="alert">{{ @register.error | raw }}</p>
+                        </check>
+                        <div class="tw-mb-[18px]">
+                            <label for="register-name" class="control-label">{{ @dict.name }}</label>
+                            <input class="form-control" placeholder="{{ @dict.name }}" id="register-name" name="register-name" type="text" value="{{ @@POST['register-name'] | esc }}" autocomplete="name" required>
+                        </div>
+                        <div class="tw-mb-[18px]">
+                            <label for="register-username" class="control-label">{{ @dict.username }}</label>
+                            <input class="form-control" placeholder="{{ @dict.username }}" id="register-username" name="register-username" type="text" value="{{ @@POST['register-username'] | esc }}" autocomplete="username" required>
+                        </div>
+                        <div class="tw-mb-[18px]">
+                            <label for="register-email" class="control-label">{{ @dict.email_address }}</label>
+                            <input class="form-control" placeholder="{{ @dict.email }}" id="register-email" name="register-email" type="text" autocomplete="email" required>
+                        </div>
+                        <div class="tw-mb-[18px]">
+                            <label for="register-password" class="control-label">{{ @dict.password }}</label>
+                            <div class="tw-relative">
+                                <input class="form-control tw-pr-11" placeholder="{{ @dict.password }}" id="register-password" name="register-password" type="password" autocomplete="new-password" required>
+                                <button type="button" class="auth-reveal" data-reveal="register-password" aria-label="Show password"><span class="fa fa-eye"></span></button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg btn-block tw-mt-2">{{ @dict.register }}</button>
+                    </form>
+
+                    <p class="tw-mt-6 tw-text-center tw-text-[13.5px]">
+                        <a href="#auth-login" class="tw-font-semibold" data-auth-switch="auth-login">&larr; {{ @dict.log_in }}</a>
+                    </p>
+                </section>
+            </check>
+
+        </div>
+    </main>
 </div>
+
 <include href="blocks/footer-scripts.html" />
+<script>
+document.addEventListener('click', function (e) {
+    var sw = e.target.closest('[data-auth-switch]');
+    if (sw) {
+        e.preventDefault();
+        document.querySelectorAll('.auth-pane').forEach(function (p) { p.hidden = true; });
+        var pane = document.getElementById(sw.getAttribute('data-auth-switch'));
+        pane.hidden = false;
+        var first = pane.querySelector('input:not([type=hidden])');
+        if (first) { first.focus(); }
+        return;
+    }
+    var rv = e.target.closest('[data-reveal]');
+    if (rv) {
+        var input = document.getElementById(rv.getAttribute('data-reveal'));
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        rv.querySelector('.fa').className = 'fa ' + (show ? 'fa-eye-slash' : 'fa-eye');
+        rv.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    }
+});
+</script>
 {~ \Helper\Plugin::instance()->callHook('render.login.after_footer') ~}
 </body>
 </html>

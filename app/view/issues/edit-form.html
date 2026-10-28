@@ -136,6 +136,14 @@
         </div>
     </div>
 
+    <div class="form-group" id="assign-suggest" data-url="{{ @BASE }}/assign/suggest">
+        <div class="col-md-10 col-md-offset-2">
+            <button type="button" class="btn btn-default btn-xs" id="assign-suggest-btn"><span class="fa fa-magic"></span> Suggest assignee</button>
+            <span class="text-muted small" id="assign-suggest-status">Ranks the team by current workload and past on-time record on similar work.</span>
+            <div id="assign-suggest-list" class="assign-list" aria-live="polite"></div>
+        </div>
+    </div>
+
     <check if="{{ !empty(@issue) }}">
         <true>
             <div class="form-group">

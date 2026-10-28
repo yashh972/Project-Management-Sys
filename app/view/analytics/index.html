@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="{{ @this->lang() }}">
+<head>
+    <include href="blocks/head.html" />
+    <link rel="stylesheet" href="{{ @BASE }}/css/analytics.css">
+</head>
+<body class="an-body">
+<set fullwidth="{{ true }}" />
+<include href="blocks/navbar.html" />
+
+<div class="container-fluid an-page">
+
+    <!-- Header -->
+    <header class="an-head">
+        <div>
+            <h1 class="an-greeting">{{ @an.greeting }}, {{ @an.first_name | esc }} <span aria-hidden="true">👋</span></h1>
+            <p class="an-sub"><check if="{{ @an.scoped }}"><true>Here's your work: the tasks assigned to you and the projects they belong to.</true><false>Here's what's happening with your projects and team.</false></check></p>
+        </div>
+        <div class="an-head-right">
+            <div class="an-seg" id="an-range" aria-label="Period">
+                <a href="{{ @BASE }}/analytics?range=week" class="{{ @an.range == 'week' ? 'active' : '' }}">This Week</a>
+                <a href="{{ @BASE }}/analytics?range=month" class="{{ @an.range == 'month' ? 'active' : '' }}">This Month</a>
+                <a href="{{ @BASE }}/analytics?range=quarter" class="{{ @an.range == 'quarter' ? 'active' : '' }}">Quarter</a>
+            </div>
+            <div class="an-export" title="Export this overview">
+                <a class="btn btn-default btn-sm" href="{{ @BASE }}/analytics/export?scope=overview&amp;format=csv"><span class="fa fa-file-text-o"></span> CSV</a>
+                <a class="btn btn-default btn-sm" href="{{ @BASE }}/analytics/export?scope=overview&amp;format=pdf"><span class="fa fa-file-pdf-o"></span> PDF</a>
+            </div>
+            <check if="{{ !@an.scoped }}"><form method="post" action="{{ @BASE }}/analytics/refresh" id="an-refresh" class="an-refresh" onsubmit="this.querySelector('button').disabled=true;this.querySelector('span.txt').textContent='Analysing…';">
+                <csrf-token />
+                <button type="submit" class="btn btn-default btn-sm"><span class="fa fa-refresh"></span> <span class="txt">Recompute insights</span></button>
+            </form></check>
+        </div>
+    </header>
+
+    <!-- Section tabs -->
+    <nav class="an-tabs" role="tablist" aria-label="Analytics sections">
+        <button type="button" role="tab" class="active" data-tab="overview" aria-selected="true"><span class="fa fa-th-large"></span>Overview</button>
+        <button type="button" role="tab" data-tab="projects" aria-selected="false"><span class="fa fa-cubes"></span>Projects</button>
+        <button type="button" role="tab" data-tab="alerts" aria-selected="false"><span class="fa fa-bell-o"></span>Alerts<check if="{{ @an.alert_count }}"><i class="an-tab-count">{{ @an.alert_count }}</i></check></button>
+        <check if="{{ !@an.scoped }}">
+        <button type="button" role="tab" data-tab="team" aria-selected="false"><span class="fa fa-users"></span>Team</button>
+        <button type="button" role="tab" data-tab="performance" aria-selected="false"><span class="fa fa-trophy"></span>Performance</button>
+        <button type="button" role="tab" data-tab="compare" aria-selected="false"><span class="fa fa-exchange"></span>Compare</button>
+        </check>
+    </nav>
+
+    <check if="{{ !@an.has_ml && !@an.scoped }}">
+        <div class="an-banner">
+            <span class="fa fa-magic"></span>
+            <div><b>ML insights are not available yet.</b> Click <i>Recompute insights</i> to analyse the task history and rank the team.</div>
+        </div>
+    </check>
+
+    <!-- ================================================= OVERVIEW -->
+    <section class="an-pane" id="pane-overview" role="tabpanel">
+
+        <div class="an-kpis">
+            <repeat group="{{ @an.kpis }}" value="{{ @k }}">
+                <a href="{{ @k.href }}" class="an-card an-kpi an-kpi-link an-tone-{{ @k.tone }}" title="View {{ @k.label }}">
+                    <div class="an-kpi-top">
+                        <span class="an-kpi-label">{{ @k.label }}</span>
+                        <span class="an-kpi-ico"><span class="fa {{ @k.icon }}"></span></span>
+                    </div>
+                    <div class="an-kpi-val">{{ @k.value }}</div>
+                    <div class="an-kpi-foot">
+                        <check if="{{ isset(@k.delta) }}">
+                            <span class="an-delta {{ @k.delta >= 0 ? 'up' : 'down' }}">
+                                <span class="fa {{ @k.delta >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }}"></span>
+                                {{ abs(@k.delta) }}{{ isset(@k.delta_unit) ? @k.delta_unit : '%' }}
+                            </span>
+                        </check>
+                        <span class="an-hint {{ !empty(@k.hint_bad) ? 'bad' : '' }}">{{ @k.hint }}</span>
+                    </div>
+                </a>
+            </repeat>
+        </div>
+
+        <div class="an-grid">
+            <div class="an-main">
+                <section class="an-card an-chart-card">
+                    <div class="an-card-head">
+                        <div>
+                            <h2>Project Performance</h2>
+                            <p>Tasks created vs completed &middot; {{ @an.range_label }}</p>
+                        </div>
+                        <div class="an-legend" id="an-legend">
+                            <button type="button" class="on" data-ds="0"><i style="background:#5b8dff"></i>Completed</button>
+                            <button type="button" class="on" data-ds="1"><i style="background:#a58bff"></i>Created</button>
+                        </div>
+                    </div>
+                    <div class="an-chart-wrap">
+                        <canvas id="an-chart" aria-label="Tasks created and completed over time" role="img"></canvas>
+                        <check if="{{ isset(@an.growth) }}">
+                            <div class="an-growth {{ @an.growth >= 0 ? 'up' : 'down' }}">
+                                <span class="an-growth-ico"><span class="fa {{ @an.growth >= 0 ? 'fa-line-chart' : 'fa-level-down' }}"></span></span>
+                                <div><b>{{ @an.growth >= 0 ? '+' : '' }}{{ @an.growth }}%</b><small>Completed vs previous period</small></div>
+                            </div>
+                        </check>
+                    </div>
+                </section>
+
+                <section class="an-card">
+                    <div class="an-card-head"><h2>Recent Activity</h2></div>
+                    <ul class="an-feed an-feed-2col">
+                        <repeat group="{{ @an.activity }}" value="{{ @a }}">
+                            <li>
+                                <span class="an-feed-ico"><span class="fa {{ @a.icon }}"></span></span>
+                                <div>
+                                    <p><b>{{ @a.who | esc }}</b> {{ @a.verb }} <a href="{{ @BASE }}/issues/{{ @a.issue_id }}">{{ @a.issue | esc }}</a></p>
+                                    <small class="an-muted">{{ @a.ago }}</small>
+                                </div>
+                            </li>
+                        </repeat>
+                    </ul>
+                </section>
+            </div>
+
+            <aside class="an-side">
+                <section class="an-card an-cal" id="an-cal">
+                    <div class="an-card-head">
+                        <h2>{{ @an.week.month }}</h2>
+                        <small class="an-muted">Tasks due</small>
+                    </div>
+                    <div class="an-week">
+                        <repeat group="{{ @an.week.days }}" value="{{ @d }}">
+                            <div class="an-day {{ @d.today ? 'today' : '' }}">
+                                <small>{{ @d.dow }}</small>
+                                <b>{{ @d.day }}</b>
+                                <i class="{{ @d.count ? 'has' : '' }}" title="{{ @d.count }} due">{{ @d.count ?: '' }}</i>
+                            </div>
+                        </repeat>
+                    </div>
+                    <ul class="an-list">
+                        <repeat group="{{ @an.deadlines }}" value="{{ @t }}">
+                            <li class="{{ @t.overdue ? 'over' : '' }}">
+                                <a href="{{ @BASE }}/issues/{{ @t.id }}">
+                                    <b>{{ @t.name | esc }}</b>
+                                    <small>{{ @t.when }}<check if="{{ @t.project }}"> &middot; {{ @t.project | esc }}</check></small>
+                                </a>
+                                <check if="{{ isset(@t.owner) }}"><span class="an-av sm" style="--c: {{ @t.owner.color }}" title="{{ @t.owner.name | esc }}">{{ @t.owner.initials }}</span></check>
+                            </li>
+                        </repeat>
+                        <check if="{{ !count(@an.deadlines) }}"><li class="an-muted">Nothing due this week.</li></check>
+                    </ul>
+                </section>
+            </aside>
+        </div>
+    </section>
+
+    <!-- ================================================= PROJECTS -->
+    <section class="an-pane" id="pane-projects" role="tabpanel" hidden>
+        <div class="an-mini-kpis">
+            <div class="an-mini an-pill-track"><b>{{ @an.project_counts.track }}</b><span>On track</span></div>
+            <div class="an-mini an-pill-progress"><b>{{ @an.project_counts.progress }}</b><span>In progress</span></div>
+            <div class="an-mini an-pill-risk"><b>{{ @an.project_counts.risk }}</b><span>At risk</span></div>
+            <div class="an-mini an-pill-done"><b>{{ @an.project_counts.done }}</b><span>Completed</span></div>
+        </div>
+        <section class="an-card">
+            <div class="an-card-head">
+                <div><h2>Projects</h2><p>Progress is completed tasks out of all tasks. Status compares progress with elapsed time and ML late-risk.</p></div>
+                <a class="an-more" href="{{ @BASE }}/issues?type_id=2&amp;status=open">Open list</a>
+            </div>
+            <div class="an-table-scroll">
+                <table class="an-table">
+                    <thead><tr><th>Project</th><th>Progress</th><th>Due</th><th>Team</th><th>Status</th></tr></thead>
+                    <tbody>
+                    <repeat group="{{ @an.projects }}" value="{{ @p }}">
+                        <tr>
+                            <td>
+                                <a class="an-proj" href="{{ @BASE }}/analytics/project/{{ @p.id }}" title="Open project analytics">
+                                    <b>{{ @p.name | esc }}</b>
+                                    <small>{{ @p.subtitle | esc }}</small>
+                                </a>
+                            </td>
+                            <td>
+                                <div class="an-prog">
+                                    <div class="an-bar"><span style="width: {{ @p.progress }}%"></span></div>
+                                    <b>{{ @p.progress }}%</b>
+                                </div>
+                                <small class="an-muted">{{ @p.done }}/{{ @p.total }} tasks</small>
+                            </td>
+                            <td class="an-muted">{{ @p.due }}</td>
+                            <td>
+                                <div class="an-avs">
+                                    <repeat group="{{ @p.team }}" value="{{ @m }}">
+                                        <span class="an-av" style="--c: {{ @m.color }}" title="{{ @m.name | esc }}">{{ @m.initials }}</span>
+                                    </repeat>
+                                </div>
+                            </td>
+                            <td><span class="an-pill an-pill-{{ @p.status }}">{{ @p.status_label }}</span></td>
+                        </tr>
+                    </repeat>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </section>
+
+    <!-- ================================================= ALERTS -->
+    <section class="an-pane" id="pane-alerts" role="tabpanel" hidden>
+        <div class="an-mini-kpis">
+            <div class="an-mini an-pill-risk"><b>{{ @an.alerts.totals.overdue }}</b><span>Overdue</span></div>
+            <div class="an-mini an-pill-progress"><b>{{ @an.alerts.totals.soon }}</b><span>Due in 2 days</span></div>
+            <div class="an-mini an-pill-done"><b>{{ @an.alerts.totals.risk }}</b><span>ML late-risk</span></div>
+        </div>
+        <section class="an-card">
+            <div class="an-card-head">
+                <div><h2>Task alerts</h2><p>Overdue tasks, tasks due within 2 days, and open tasks the ML forecast rates at 40% or more likely to slip. Owners get the same digest by email from <code>cron/task_alerts.php</code>.</p></div>
+                <check if="{{ !@an.scoped }}"><form method="post" action="{{ @BASE }}/analytics/alerts/send" onsubmit="return confirm('Email the alert digest to every task owner listed here?');">
+                    <csrf-token />
+                    <button type="submit" class="btn btn-default btn-sm"><span class="fa fa-envelope-o"></span> Email owners now</button>
+                </form></check>
+            </div>
+            <check if="{{ @an.alert_count }}">
+                <true>
+                    <repeat group="{{ @an.alerts.owners }}" value="{{ @o }}">
+                        <div class="an-alert-owner">
+                            <h3>{{ @o.user.name | esc }}</h3>
+                            <repeat group="{{ @o.items }}" value="{{ @t }}">
+                                <a class="an-alert-row an-alert-{{ @t.kind }}" href="{{ @BASE }}/issues/{{ @t.id }}">
+                                    <span class="an-pill an-alert-tag">{{ @t.label }}</span>
+                                    <b>#{{ @t.id }} {{ @t.name | esc }}</b>
+                                    <small class="an-muted">
+                                        <check if="{{ @t.due }}">due {{ @t.due }}</check>
+                                        <check if="{{ @t.p !== null }}"> &middot; {{ @t.p }}% late risk</check>
+                                    </small>
+                                </a>
+                            </repeat>
+                        </div>
+                    </repeat>
+                    <check if="{{ @an.alerts.unassigned }}">
+                        <div class="an-alert-owner">
+                            <h3>Unassigned</h3>
+                            <repeat group="{{ @an.alerts.unassigned }}" value="{{ @t }}">
+                                <a class="an-alert-row an-alert-{{ @t.kind }}" href="{{ @BASE }}/issues/{{ @t.id }}"><b>#{{ @t.id }} {{ @t.name | esc }}</b><small class="an-muted">due {{ @t.due }}</small></a>
+                            </repeat>
+                        </div>
+                    </check>
+                </true>
+                <false><p class="an-muted an-pad">No alerts. Nothing is overdue, due soon or flagged as at risk.</p></false>
+            </check>
+        </section>
+    </section>
+
+    <check if="{{ !@an.scoped }}">
+    <!-- ================================================= TEAM -->
+    <section class="an-pane" id="pane-team" role="tabpanel" hidden>
+        <section class="an-card">
+            <div class="an-card-head">
+                <div><h2>Team Workload</h2><p>Open hours per person vs a 40h capacity.</p></div>
+            </div>
+            <div class="an-team">
+                <repeat group="{{ @an.workload }}" value="{{ @w }}">
+                    <div class="an-member">
+                        <div class="an-member-top">
+                            <span class="an-av" style="--c: {{ @w.color }}">{{ @w.initials }}</span>
+                            <div><b>{{ @w.name | esc }}</b><small class="an-muted">{{ @w.tasks }} open task{{ @w.tasks == 1 ? '' : 's' }}</small></div>
+                            <span class="an-member-pct an-load-{{ @w.tone }}">{{ @w.pct }}%</span>
+                        </div>
+                        <div class="an-bar an-bar-{{ @w.tone }}"><span style="width: {{ @w.pct }}%"></span></div>
+                        <div class="an-member-foot">
+                            <span>{{ @w.hours }}h open</span>
+                            <check if="{{ @w.overdue }}"><span class="an-bad">{{ @w.overdue }} overdue</span></check>
+                        </div>
+                    </div>
+                </repeat>
+            </div>
+        </section>
+    </section>
+
+    <!-- ================================================= PERFORMANCE (ML) -->
+    <section class="an-pane" id="pane-performance" role="tabpanel" hidden>
+        <check if="{{ @an.has_ml }}">
+            <true>
+                <section class="an-card">
+                    <div class="an-card-head">
+                        <div>
+                            <h2>Employee Performance</h2>
+                            <p>Judged against what was expected for each task's difficulty, not raw counts.</p>
+                        </div>
+                    </div>
+                    <div class="an-table-scroll">
+                    <table class="an-table an-perf">
+                        <thead>
+                            <tr><th>#</th><th>Employee</th><th>Score</th><th>On-time <small>actual / expected</small></th><th>Speed</th><th>Trend</th><th>Insights</th></tr>
+                        </thead>
+                        <tbody>
+                        <repeat group="{{ @an.employees }}" value="{{ @e }}">
+                            <tr>
+                                <td class="an-rank">
+                                    <b>{{ isset(@e.rank) ? @e.rank : '–' }}</b>
+                                    <check if="{{ @e.shift > 0 }}"><small class="an-up" title="Ranks higher than by raw on-time %">▲{{ @e.shift }}</small></check>
+                                    <check if="{{ @e.shift < 0 }}"><small class="an-down" title="Ranks lower than by raw on-time %">▼{{ abs(@e.shift) }}</small></check>
+                                </td>
+                                <td>
+                                    <div class="an-emp">
+                                        <span class="an-av" style="--c: {{ @e.color }}">{{ @e.initials }}</span>
+                                        <div>
+                                            <b>{{ @e.name | esc }}</b>
+                                            <span class="an-cluster an-cl-{{ @e.cluster_key }}">{{ @e.cluster }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="an-score">
+                                        <div class="an-bar"><span style="width: {{ isset(@e.score) ? @e.score : 0 }}%"></span></div>
+                                        <b>{{ isset(@e.score) ? round(@e.score) : '–' }}</b>
+                                    </div>
+                                </td>
+                                <td><b>{{ @e.on_time }}%</b> <small class="an-muted">/ {{ @e.expected }}%</small><br><small class="an-muted">{{ @e.tasks }} tasks</small></td>
+                                <td>
+                                    <b class="{{ @e.speed >= 1.05 ? 'an-up' : (@e.speed <= 0.9 ? 'an-down' : '') }}">{{ @e.speed }}×</b>
+                                    <br><small class="an-muted">{{ @e.reopen }}% rework</small>
+                                </td>
+                                <td>
+                                    <check if="{{ @e.trend > 5 }}"><span class="an-up"><span class="fa fa-arrow-up"></span> {{ @e.trend }}</span></check>
+                                    <check if="{{ @e.trend < -5 }}"><span class="an-down"><span class="fa fa-arrow-down"></span> {{ abs(@e.trend) }}</span></check>
+                                    <check if="{{ @e.trend >= -5 && @e.trend <= 5 }}"><span class="an-muted">–</span></check>
+                                </td>
+                                <td class="an-insights">
+                                    <repeat group="{{ array_slice(@e.strengths, 0, 2) }}" value="{{ @s }}"><span class="an-ins good"><span class="fa fa-check"></span>{{ @s | esc }}</span></repeat>
+                                    <repeat group="{{ array_slice(@e.concerns, 0, 2) }}" value="{{ @c }}"><span class="an-ins bad"><span class="fa fa-exclamation"></span>{{ @c | esc }}</span></repeat>
+                                </td>
+                            </tr>
+                        </repeat>
+                        </tbody>
+                    </table>
+                    </div>
+                </section>
+
+                <div class="an-2up">
+                    <section class="an-card">
+                        <div class="an-card-head">
+                            <div><h2>Likely to Slip</h2><p>Open tasks with the highest late-risk.</p></div>
+                        </div>
+                        <ul class="an-list">
+                            <repeat group="{{ @an.at_risk }}" value="{{ @t }}">
+                                <li>
+                                    <a href="{{ @BASE }}/issues/{{ @t.id }}">
+                                        <b>{{ @t.name | esc }}</b>
+                                        <small>Due {{ @t.due }}<check if="{{ isset(@t.owner) }}"> &middot; {{ @t.owner.name | esc }}</check></small>
+                                    </a>
+                                    <span class="an-risk an-risk-{{ @t.tone }}">{{ @t.p }}%</span>
+                                </li>
+                            </repeat>
+                            <check if="{{ !count(@an.at_risk) }}"><li class="an-muted">No open task looks at risk.</li></check>
+                        </ul>
+                    </section>
+
+                    <check if="{{ isset(@an.ml) }}">
+                    <section class="an-card an-model">
+                        <div class="an-card-head"><h2>How the ML works</h2></div>
+                        <dl>
+                            <dt>Late-risk model</dt><dd>{{ @an.ml.risk_model }}<br><small>AUC {{ @an.ml.risk_auc }} on unseen later tasks (0.5 = chance)</small></dd>
+                            <dt>Task-difficulty model</dt><dd>{{ @an.ml.late_model }}<br><small>AUC {{ @an.ml.late_auc }} &middot; fairness baseline, blind to who does the work</small></dd>
+                            <dt>Cycle-time model</dt><dd>{{ @an.ml.cycle_model }}<br><small>MAE {{ @an.ml.cycle_mae }}d vs {{ @an.ml.cycle_base }}d baseline</small></dd>
+                            <dt>Clustering</dt><dd>KMeans, k={{ @an.ml.k }}<br><small>silhouette {{ @an.ml.silhouette }}</small></dd>
+                            <dt>Trained on</dt><dd>{{ @an.ml.tasks }} closed tasks<br><small>{{ @an.ml.open }} open tasks scored &middot; {{ @an.ml.computed_at }}</small></dd>
+                        </dl>
+                        <p class="an-note">Score = 35% reliability, 25% speed, 15% quality, 10% estimation, 15% volume &mdash; each measured against the model's expectation for that task.</p>
+                    </section>
+                    </check>
+                </div>
+            </true>
+            <false><section class="an-card"><p class="an-muted an-pad">No ML results yet. Click <i>Recompute insights</i>.</p></section></false>
+        </check>
+    </section>
+
+    <!-- ================================================= COMPARE (ML) -->
+    <section class="an-pane" id="pane-compare" role="tabpanel" hidden>
+        <check if="{{ @an.has_ml }}">
+            <true>
+                <section class="an-card an-h2h" id="an-compare">
+                    <div class="an-h2h-pickers">
+                        <div class="an-pick a">
+                            <label for="cmp-a">Employee A</label>
+                            <select id="cmp-a" class="form-control">
+                                <repeat group="{{ @an.employees }}" value="{{ @e }}">
+                                    <option value="{{ @e.id }}" {{ isset(@e.score) ? '' : 'disabled' }}>{{ @e.name | esc }}</option>
+                                </repeat>
+                            </select>
+                        </div>
+                        <div class="an-vs">VS</div>
+                        <div class="an-pick b">
+                            <label for="cmp-b">Employee B</label>
+                            <select id="cmp-b" class="form-control">
+                                <repeat group="{{ @an.employees }}" value="{{ @e }}">
+                                    <option value="{{ @e.id }}" {{ isset(@e.score) ? '' : 'disabled' }}>{{ @e.name | esc }}</option>
+                                </repeat>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="an-h2h-body">
+                        <div class="an-prof a" id="cmp-prof-a"></div>
+                        <div class="an-radar"><canvas id="cmp-radar" aria-label="Radar comparison of the two employees" role="img"></canvas></div>
+                        <div class="an-prof b" id="cmp-prof-b"></div>
+                    </div>
+
+                    <p class="an-verdict" id="cmp-verdict"></p>
+                    <div class="an-rows" id="cmp-rows"></div>
+
+                    <div class="an-notes">
+                        <div id="cmp-notes-a"></div>
+                        <div id="cmp-notes-b"></div>
+                    </div>
+                </section>
+            </true>
+            <false><section class="an-card"><p class="an-muted an-pad">No ML results yet. Click <i>Recompute insights</i>.</p></section></false>
+        </check>
+    </section>
+
+    </check>
+
+    <include href="blocks/footer.html" />
+</div>
+
+<script src="{{ @BASE }}/js/chart.umd.min.js"></script>
+<script>window.AN = {{ @an_json | raw }};</script>
+<script src="{{ @BASE }}/js/analytics.js"></script>
+<script src="{{ @BASE }}/js/analytics-calendar.js"></script>
+</body>
+</html>

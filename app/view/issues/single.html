@@ -46,7 +46,7 @@
             </ol>
         </div>
     </check>
-    <div class="clearfix">
+    <div class="issue-hero clearfix">
         <h3 class="pull-left issue-heading">
             <a href="{{ @BASE }}/issues/{{ @issue.id }}" class="nolink">{{ @issue.name | esc }}</a>
             <check if="{{ @issue.size_estimate }}">
@@ -100,9 +100,31 @@
                 </form>
             </check>
         </div>
+        <div class="issue-hero-meta clearfix">
+            <set status_slug="{{ strtolower(str_replace(array(' ', '_'), '-', @issue.status_name)) }}" />
+            <span class="badge status" data-status="{{ @status_slug }}">{{ isset(@dict[@issue.status_name]) ? @dict[@issue.status_name] : str_replace('_', ' ', @issue.status_name) | esc }}</span>
+            <span class="meta-chip"><span class="fa fa-tag"></span>{{ isset(@dict[@type.name]) ? @dict[@type.name] : str_replace('_', ' ', @type.name) | esc }}</span>
+            <check if="{{ @issue.priority != 0 }}">
+                <span class="meta-chip meta-chip-{{ @issue.priority > 0 ? 'high' : 'low' }}"><span class="fa fa-flag"></span>{{ isset(@dict[@issue.priority_name]) ? @dict[@issue.priority_name] : str_replace('_', ' ', @issue.priority_name) | esc }}</span>
+            </check>
+            <check if="{{ @issue.due_date && strtotime(@issue.due_date) }}">
+                <span class="meta-chip"><span class="fa fa-calendar-o"></span>{{ $this->formatDate(strtotime(@issue.due_date)) }}</span>
+            </check>
+            <check if="{{ @issue.sprint_id }}">
+                <a class="meta-chip" href="{{ @BASE }}/taskboard/{{ @sprint.id }}"><span class="fa fa-bolt"></span>{{ @sprint.name | esc }}</a>
+            </check>
+            <check if="{{ !empty(@issue.hours_total) && @issue.hours_total > 0 }}">
+                <set hours_pct="{{ max(0, min(100, round((@issue.hours_total - (@issue.hours_remaining ?: 0)) / @issue.hours_total * 100))) }}" />
+                <div class="issue-progress">
+                    <div class="issue-progress-label"><span>{{ @dict.cols.hours_remaining }}: {{ @issue.hours_remaining ?: 0 | esc }} / {{ @issue.hours_total | esc }}</span><b>{{ @hours_pct }}<small>%</small></b></div>
+                    <div class="progress"><div class="progress-bar" style="width: {{ @hours_pct }}%"></div></div>
+                </div>
+            </check>
+        </div>
     </div>
-    <div class="row">
+    <div class="row issue-body">
         <div class="col-lg-5">
+            <div class="surface-card">
             <check if="{{ @type.role == 'project' }}">
                 <p><a href="{{ @BASE }}/issues/project/{{ @issue.id }}" class="btn btn-default btn-sm">{{ @dict.project_overview }}</a></p>
             </check>
@@ -197,10 +219,11 @@
 
             {~ \Helper\Plugin::instance()->callHook('render.issue_single.after_description', @issue) ~}
 
-            <hr class="hidden-lg">
+            </div>
         </div>
 
         <div class="col-lg-7">
+            <div class="surface-card">
             {~ \Helper\Plugin::instance()->callHook('render.issue_single.before_files', @issue) ~}
 
             <ul class="nav nav-tabs" role="tablist">
@@ -331,6 +354,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
 
         </div>

@@ -3,10 +3,10 @@
         <td><input type="checkbox" name="id[]" value="{{ @item.id }}"></td>
     </check>
     <td><a href="{{ @BASE }}/issues/{{ @item.id }}" class="{{ @item.status_closed ? 'text-muted' : '' }}">{{ @item.id }}</a></td>
-    <td><a href="{{ @BASE }}/issues/{{ @item.id }}" class="{{ @item.status_closed ? 'text-muted' : '' }}">{{ @item.name | esc }}</a></td>
+    <td class="issue-title"><a href="{{ @BASE }}/issues/{{ @item.id }}" class="{{ @item.status_closed ? 'text-muted' : '' }}">{{ @item.name | esc }}</a></td>
     <td>{{ isset(@dict[@item.type_name]) ? @dict[@item.type_name] : str_replace('_', ' ', @item.type_name) }}</td>
-    <td>{{ isset(@dict[@item.priority_name]) ? @dict[@item.priority_name] : str_replace('_', ' ', @item.priority_name) }}</td>
-    <td>{{ isset(@dict[@item.status_name]) ? @dict[@item.status_name] : str_replace('_', ' ', @item.status_name) }}</td>
+    <td><span class="prio {{ @item.priority > 0 ? 'prio-high' : (@item.priority < 0 ? 'prio-low' : '') }}">{{ isset(@dict[@item.priority_name]) ? @dict[@item.priority_name] : str_replace('_', ' ', @item.priority_name) }}</span></td>
+    <td><span class="badge status" data-status="{{ strtolower(str_replace(array(' ', '_'), '-', @item.status_name)) }}">{{ isset(@dict[@item.status_name]) ? @dict[@item.status_name] : str_replace('_', ' ', @item.status_name) }}</span></td>
     <td>{{ @item.parent_id ?: '' }}</td>
     <check if="{{ @item.author_username }}">
         <true>

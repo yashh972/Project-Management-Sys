@@ -1,0 +1,12 @@
+{
+  "name": "phproject-ui",
+  "private": true,
+  "description": "Build tooling for the Tailwind utility layer (css/tailwind.css). The built file is committed; only run this when changing templates.",
+  "scripts": {
+    "build:css": "tailwindcss --postcss postcss.config.js -c tailwind.config.js -i css/tailwind.src.css -o css/tailwind.css --minify",
+    "watch:css": "tailwindcss --postcss postcss.config.js -c tailwind.config.js -i css/tailwind.src.css -o css/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

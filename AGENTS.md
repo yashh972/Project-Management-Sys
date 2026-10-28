@@ -272,5 +272,5 @@ php install.php [options]                 # Interactive or CLI install
 
 # Docker
 docker build -t phproject .               # Build Docker image
-docker run -p 8080:80 phproject           # Run container
+docker run -p 9090:80 phproject           # Run container
 ```

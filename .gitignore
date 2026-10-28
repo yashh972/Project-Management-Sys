@@ -6,3 +6,9 @@
 *.cache
 *.db
 *.sqlite
+/node_modules/
+/ml/.venv/
+__pycache__/
+/phproject.db.bak*
+/ml/assign_model.joblib
+/credentials.txt

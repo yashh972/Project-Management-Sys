@@ -211,6 +211,14 @@ class Taskboard extends \Controller
             ];
         }
 
+        $statusCounts = array_fill_keys(array_keys($mapped_statuses), 0);
+        foreach ($tasks as $task) {
+            if (isset($statusCounts[$task->status])) {
+                $statusCounts[$task->status]++;
+            }
+        }
+
+        $f3->set("status_counts", $statusCounts);
         $f3->set("type_ids", $typeIds);
         $f3->set("taskboard", array_values($taskboard));
         $f3->set("filter", $params["filter"]);

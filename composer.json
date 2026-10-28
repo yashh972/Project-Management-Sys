@@ -25,5 +25,11 @@
         "squizlabs/php_codesniffer": "^3.13.6",
         "rector/rector": "^2.6.7",
         "phpunit/phpunit": "^10.5.64"
+    },
+    "scripts": {
+        "serve": "@php -S localhost:9090 router.php"
+    },
+    "scripts-descriptions": {
+        "serve": "Start the dev server on http://localhost:9090"
     }
 }
