@@ -6,6 +6,8 @@ Agile CodeBoard is built on [Phproject](https://github.com/Alanaktion/phproject)
 
 **Runtime:** PHP **8.5.12** (latest security release) · MySQL 8 or SQLite · Python 3.12 · Docker Compose
 
+**Changelog:** [CHANGELOG.md](CHANGELOG.md)
+
 ---
 
 ## Highlights
@@ -121,6 +123,8 @@ make forecast    # forecast the current sprint
 ---
 
 ## Feature changelog — added in this session
+
+The complete release-style changelog is in [CHANGELOG.md](CHANGELOG.md).
 
 ### 1. Platform foundation
 
