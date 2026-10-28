@@ -7,7 +7,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from ..auth import require_internal_token
 from ..cycle import cycle_service
 from ..risk import risk_service
-from ..schemas import CycleRequest, CycleResponse, RiskRequest, RiskResponse
+from ..schemas import (
+    CycleRequest,
+    CycleResponse,
+    RiskBatchItem,
+    RiskBatchRequest,
+    RiskBatchResponse,
+    RiskRequest,
+    RiskResponse,
+)
 
 router = APIRouter(prefix="/v1/predict", tags=["predict"], dependencies=[Depends(require_internal_token)])
 
@@ -20,6 +28,25 @@ def predict_risk(payload: RiskRequest) -> RiskResponse:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/risk/batch", response_model=RiskBatchResponse)
+def predict_risk_batch(payload: RiskBatchRequest) -> RiskBatchResponse:
+    results = []
+    for issue_id in dict.fromkeys(payload.issue_ids):
+        try:
+            result = risk_service.predict(issue_id)
+            results.append(
+                RiskBatchItem(
+                    issue_id=issue_id,
+                    p_late=result["p_late"],
+                    risk=result["risk"],
+                    explanation=result["explanation"],
+                )
+            )
+        except (KeyError, ValueError) as exc:
+            results.append(RiskBatchItem(issue_id=issue_id, error=str(exc)))
+    return RiskBatchResponse(results=results)
 
 
 @router.post("/cycle", response_model=CycleResponse)

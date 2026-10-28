@@ -47,6 +47,7 @@
 		});
 		list.innerHTML = html;
 		status.textContent = 'Ranked by the assignment service using on-time history, current load and tag overlap.';
+		logSuggestion('shown', null);
 	}
 
 	btn.addEventListener('click', function () {
@@ -63,7 +64,7 @@
 			.then(function () { btn.disabled = false; });
 	});
 
-	function logAcceptance(ownerId) {
+	function logSuggestion(action, ownerId) {
 		var rec = lastRecommendation;
 		if (!rec) { return; }
 		var csrf = document.querySelector('meta[name="csrf-token"]');
@@ -76,11 +77,11 @@
 		var params = new URLSearchParams();
 		params.set('csrf-token', csrf ? csrf.getAttribute('content') : '');
 		params.set('kind', 'assignment');
-		params.set('action', 'accepted');
+		params.set('action', action);
 		params.set('issue_id', rec.issue_id || '');
 		params.set('payload', JSON.stringify({
 			issue_id: rec.issue_id || null,
-			selected_user_id: Number(ownerId),
+			selected_user_id: ownerId ? Number(ownerId) : null,
 			selected: chosen,
 			candidates: rec.candidates
 		}));
@@ -101,7 +102,7 @@
 			sel.value = b.getAttribute('data-owner');
 			sel.dispatchEvent(new Event('change', { bubbles: true }));
 			status.textContent = 'Assignee set. ' + DEFAULT_HINT;
-			logAcceptance(b.getAttribute('data-owner'));
+			logSuggestion('accepted', b.getAttribute('data-owner'));
 		}
 	});
 })();

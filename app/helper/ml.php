@@ -121,6 +121,17 @@ class Ml
     }
 
     /**
+     * @param int[] $issueIds
+     * @return array{0:int,1:array|null,2:string|null}
+     */
+    public static function batchRisk(array $issueIds): array
+    {
+        return self::request('POST', '/v1/predict/risk/batch', [
+            'issue_ids' => array_values(array_map('intval', $issueIds)),
+        ], 20);
+    }
+
+    /**
      * @return array{0:int,1:array|null,2:string|null}
      */
     public static function predictCycle(int $issueId): array
@@ -131,11 +142,17 @@ class Ml
     /**
      * @return array{0:int,1:array|null,2:string|null}
      */
-    public static function forecastSprint(int $sprintId, int $simulations = 5000): array
-    {
+    public static function forecastSprint(
+        int $sprintId,
+        int $simulations = 5000,
+        int $extraDays = 0,
+        float $capacityMultiplier = 1.0
+    ): array {
         return self::request('POST', '/v1/forecast/sprint', [
             'sprint_id' => $sprintId,
             'simulations' => max(200, min(50000, $simulations)),
+            'extra_days' => max(-30, min(90, $extraDays)),
+            'capacity_multiplier' => max(0.1, min(3.0, $capacityMultiplier)),
         ], 30);
     }
 

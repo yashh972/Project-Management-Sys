@@ -33,7 +33,13 @@ def _topological_order(task_ids: list[int], deps: dict[int, list[int]]) -> tuple
     return order, had_cycle
 
 
-def forecast_sprint(sprint_id: int, simulations: int = 5000, capacity_hours_per_day: float = 8.0) -> dict:
+def forecast_sprint(
+    sprint_id: int,
+    simulations: int = 5000,
+    capacity_hours_per_day: float = 8.0,
+    extra_days: int = 0,
+    capacity_multiplier: float = 1.0,
+) -> dict:
     sprints = load_sprints()
     sprint = sprints[sprints["id"] == sprint_id]
     if sprint.empty:
@@ -67,6 +73,7 @@ def forecast_sprint(sprint_id: int, simulations: int = 5000, capacity_hours_per_
         }
 
     task_ids = [int(value) for value in tasks["id"].tolist()]
+    effective_capacity = max(0.5, capacity_hours_per_day * capacity_multiplier)
     dependencies = load_dependencies()
     deps: dict[int, list[int]] = {}
     dependency_count = 0
@@ -95,7 +102,7 @@ def forecast_sprint(sprint_id: int, simulations: int = 5000, capacity_hours_per_
         if pd.notna(hours) and float(hours) > 0:
             hours = float(hours)
             scales[position] = float(np.clip(hours / fallback_hours, 0.5, 3.0))
-            min_days[position] = hours / max(capacity_hours_per_day, 0.5)
+            min_days[position] = hours / effective_capacity
     sampled *= scales
     sampled = np.maximum(sampled, min_days)
 
@@ -126,7 +133,11 @@ def forecast_sprint(sprint_id: int, simulations: int = 5000, capacity_hours_per_
                 user_available[owner_key] = finish
 
     end_days = finish_days.max(axis=1)
-    sprint_end = pd.Timestamp(sprint["end_date"]) + pd.Timedelta(1, unit="D") - pd.Timedelta(1, unit="s")
+    sprint_end = (
+        pd.Timestamp(sprint["end_date"])
+        + pd.Timedelta(1 + extra_days, unit="D")
+        - pd.Timedelta(1, unit="s")
+    )
     sprint_end_days = max(0.0, (sprint_end - pd.Timestamp(now)).total_seconds() / 86400)
     probability = float((end_days <= sprint_end_days).mean())
 
@@ -159,7 +170,9 @@ def forecast_sprint(sprint_id: int, simulations: int = 5000, capacity_hours_per_
         "simulations": simulations,
         "historical_cycle_samples": int(len(history)),
         "dependencies": dependency_count,
-        "capacity_hours_per_day": capacity_hours_per_day,
+        "capacity_hours_per_day": round(effective_capacity, 2),
+        "capacity_multiplier": capacity_multiplier,
+        "extra_days": extra_days,
         "duration_source": "historical_cycle_times" if len(history) >= 5 else "lognormal_default",
         "dependencies_outside_sprint": "assumed_complete",
         "dependency_cycle": "parallel" if had_cycle else "none",

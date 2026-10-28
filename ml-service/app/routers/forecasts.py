@@ -19,6 +19,8 @@ def sprint_forecast(payload: ForecastRequest) -> ForecastResponse:
                 sprint_id=payload.sprint_id,
                 simulations=payload.simulations,
                 capacity_hours_per_day=payload.capacity_hours_per_day,
+                extra_days=payload.extra_days,
+                capacity_multiplier=payload.capacity_multiplier,
             )
         )
     except KeyError as exc:

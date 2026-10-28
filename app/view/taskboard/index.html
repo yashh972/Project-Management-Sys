@@ -79,7 +79,7 @@
                 <button type="button" id="forecast-btn" class="btn btn-default btn-xs" data-url="{{ @BASE }}/intelligence/forecast/{{ @sprint.id }}" data-base="{{ @BASE }}" title="Simulate delivery for this sprint">
                     <span class="fa fa-line-chart"></span> Forecast
                 </button>
-                <button type="button" id="optimize-btn" class="btn btn-default btn-xs" data-url="{{ @BASE }}/intelligence/optimize" data-sprint="{{ @sprint.id }}" data-base="{{ @BASE }}" title="Recommend an optimal owner for each open task">
+                <button type="button" id="optimize-btn" class="btn btn-default btn-xs" data-url="{{ @BASE }}/intelligence/optimize" data-sprint="{{ @sprint.id }}" data-base="{{ @BASE }}" data-can-apply="{{ @user.rank >= \Model\User::RANK_MANAGER ? 1 : 0 }}" title="Recommend an optimal owner for each open task">
                     <span class="fa fa-magic"></span> Optimize
                 </button>
             </div>
@@ -503,6 +503,7 @@
                     <p class="text-muted">Solving…</p>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="optimize-apply" style="display: none;">Apply all changes</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -510,5 +511,6 @@
     </div>
     <script src="{{ @BASE }}/js/forecast.js"></script>
     <script src="{{ @BASE }}/js/optimize.js"></script>
+    <script src="{{ @BASE }}/js/risk-badges.js"></script>
 </body>
 </html>

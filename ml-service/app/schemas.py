@@ -40,6 +40,22 @@ class RiskResponse(BaseModel):
     generated_at: datetime
 
 
+class RiskBatchRequest(BaseModel):
+    issue_ids: list[int] = Field(min_length=1, max_length=200)
+
+
+class RiskBatchItem(BaseModel):
+    issue_id: int
+    p_late: float | None = None
+    risk: Literal["low", "medium", "high"] | None = None
+    explanation: list[ExplanationItem] = Field(default_factory=list)
+    error: str | None = None
+
+
+class RiskBatchResponse(BaseModel):
+    results: list[RiskBatchItem] = Field(default_factory=list)
+
+
 class CycleRequest(BaseModel):
     issue_id: int = Field(gt=0)
 
@@ -58,6 +74,8 @@ class ForecastRequest(BaseModel):
     sprint_id: int = Field(gt=0)
     simulations: int = Field(default=5000, ge=200, le=50000)
     capacity_hours_per_day: float = Field(default=8.0, gt=0, le=24)
+    extra_days: int = Field(default=0, ge=-30, le=90)
+    capacity_multiplier: float = Field(default=1.0, gt=0, le=3)
 
 
 class ForecastDriver(BaseModel):

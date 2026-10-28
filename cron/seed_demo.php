@@ -58,7 +58,7 @@ function demo_user($db, string $username, string $name, string $role, array $pas
             $password['hash'],
             $password['salt'],
             $role,
-            $role === 'admin' ? 100 : 10,
+            $role === 'admin' ? 100 : \Model\User::RANK_USER,
             substr(md5($username), 0, 6),
             date('Y-m-d H:i:s', $now - 200 * 86400),
         ]

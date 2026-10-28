@@ -43,3 +43,11 @@ if ($f3->get("db.engine") === "sqlite") {
 
 // Load database-backed config
 \Model\Config::loadAll();
+
+// Notification templates expect an imap array even when mailboxes are disabled.
+$f3->set('imap', [
+    'hostname' => $f3->get('imap.hostname'),
+    'username' => $f3->get('imap.username'),
+    'password' => $f3->get('imap.password'),
+    'truncate_lines' => $f3->get('imap.truncate_lines'),
+]);

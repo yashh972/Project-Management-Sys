@@ -58,14 +58,16 @@ This fork turns Phproject into **Agile CodeBoard**, a project-management platfor
 - **Monte Carlo sprint forecasting** — samples historical cycle times, respects `issue_dependency` ordering, queues work per assignee, applies capacity and returns the probability of finishing on time plus P50/P85/P95 dates.
 - **Risk drivers** — shows which tasks are most often the last to finish across simulations, with criticality scores and median finish dates.
 - **Reproducible forecasts** — fixed seed and explicit assumptions (simulation count, historical samples, dependency handling, capacity, data source) returned with every forecast.
+- **What-if scenarios** — re-run a forecast with extra days, reduced or increased capacity, or both, directly from the forecast modal; the scenario is echoed back in the assumptions.
 - **Assignee recommendations** — ranks the team for an existing issue, an entire sprint or a draft task using trailing on-time rate, current open hours, tag overlap, historical sample size and capacity fit.
 - **Prescriptive sprint optimizer** — OR-Tools CP-SAT assignment with one owner per task, per-person capacity, WIP limits and a configurable fairness cap; falls back to a deterministic greedy solver when CP-SAT is unavailable.
 - **Baseline and lift** — compares the optimizer's expected fit against the current assignment, reports changed owners, projected hours, utilization per person and the fairness cap used.
-- **Optimizer preview UI** — a sprint-board modal shows the solver, fit/lift, fairness state, per-user load and every proposed owner change.
+- **Apply reviewed assignments** — managers and admins can apply the optimizer's changes in one action; every change uses `Model\Issue::save()`, so the normal issue history and audit trail still fire, and each applied run is recorded in `assignment_run`/`assignment_item`.
+- **Optimizer preview UI** — a sprint-board modal shows the solver, fit/lift, fairness state, per-user load, every proposed owner change and an apply-all action for managers.
 
 #### Feedback, trust and evaluation
 
-- **Suggestion feedback loop** — `suggestion_log` records accepted, rejected, overridden and ignored suggestions with the model payload and acting user, so acceptance and realized lift can be measured later.
+- **Suggestion feedback loop** — `suggestion_log` records shown, accepted, rejected, overridden and ignored suggestions with the model payload and acting user, so acceptance and realized lift can be measured later.
 - **Model quality page** — an admin view with AUC, Brier, ECE, precision@10%, walk-forward folds, reliability bins and active model versions.
 - **Explainable risk chip** — open issues show a calibrated late-risk percentage on hover, with the top contributing factors and model version.
 - **Admin-only access** — model quality and model registry routes require an administrator; issue-level endpoints enforce `allowAccess()`.
@@ -77,6 +79,8 @@ This fork turns Phproject into **Agile CodeBoard**, a project-management platfor
 - **Sprint forecast modal** — probability on time, P50/P85/P95 dates, biggest drivers and assumptions, available from the task board.
 - **Optimized assignment modal** — solver, expected fit, baseline fit, lift, fairness cap, owner changes and per-user utilization.
 - **Risk chip on issue pages** — no page reload; the chip fetches the prediction and renders a color-coded risk level.
+- **Batch risk badges** — task-board cards load calibrated risk percentages in one request, with a low/medium/high color code.
+- **Suggestion impressions** — every ranked assignee list logs a `shown` event before an acceptance is recorded, enabling a real acceptance funnel.
 - **Analytics integration** — the existing “Recompute insights” action now calls the ML service; the legacy analytics scripts remain available through a compatibility bridge.
 - **MySQL analytics bridge** — mirrors the tables the legacy scripts need into a temporary SQLite database, runs the scripts, and syncs the result tables back to MySQL. SQLite remains the native path.
 - **CSRF-protected feedback logging** — assignment acceptances are logged through the existing CSRF mechanism.
@@ -97,11 +101,11 @@ This fork turns Phproject into **Agile CodeBoard**, a project-management platfor
 
 - **Deterministic demo data** — 5 users, 3 projects, 14 sprints, 360 closed tasks with realistic lateness profiles, open sprint work, tags, dependencies and activation history; demo login `demo_alice / demo1234`.
 - **Documentation** — `docs/intelligence-layer.md` covers architecture, endpoints, migrations, model notes and limitations; this README links to it.
-- **Automated tests** — 16 Python tests covering health, authentication, risk, cycle time, forecasting, assignment, optimizer, backtesting and feedback; 24 PHP tests (2 skipped), PHPCS, PHPStan and Ruff all green locally.
+- **Automated tests** — 18 Python tests covering health, authentication, risk, batch risk, cycle time, forecasting, what-if scenarios, assignment, optimizer, backtesting and feedback; 24 PHP tests (2 skipped), PHPCS, PHPStan and Ruff all green locally.
 - **Operational scripts** — `cron/migrate.php`, `cron/refresh_ml.php` and `cron/seed_demo.php`.
 
 #### Not yet implemented (reserved for later phases)
 
-The schema reserves tables for GitHub/GitLab integration, DORA metrics, audit logging, background jobs and outbox events, but those features are not wired into the UI yet. Real-time collaboration, semantic search/duplicate detection, the LLM copilot and multi-tenant SSO are planned next. The legacy analytics MySQL bridge is a compatibility layer, not the long-term pipeline, and the optimizer currently previews assignments without applying them automatically.
+The schema reserves tables for GitHub/GitLab integration, DORA metrics, audit logging, background jobs and outbox events, but those features are not wired into the UI yet. Real-time collaboration, semantic search/duplicate detection, the LLM copilot and multi-tenant SSO are planned next. The legacy analytics MySQL bridge is a compatibility layer, not the long-term pipeline.
 
 **Added by Vedant Chalke.**

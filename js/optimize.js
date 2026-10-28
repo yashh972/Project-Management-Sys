@@ -7,6 +7,8 @@
 
 	var modal = document.getElementById('optimize-modal');
 	var body = document.getElementById('optimize-body');
+	var applyButton = document.getElementById('optimize-apply');
+	var lastAssignments = [];
 
 	function esc(value) {
 		return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
@@ -17,6 +19,8 @@
 	button.addEventListener('click', function () {
 		if (window.jQuery && modal) { window.jQuery(modal).modal('show'); }
 		if (!body) { return; }
+		lastAssignments = [];
+		if (applyButton) { applyButton.style.display = 'none'; }
 		body.innerHTML = '<p class="text-muted">Solving the sprint assignment problem…</p>';
 
 		var csrf = document.querySelector('meta[name="csrf-token"]');
@@ -60,6 +64,7 @@
 						'</tr>';
 				}).join('');
 
+				lastAssignments = data.assignments || [];
 				body.innerHTML =
 					'<div class="alert alert-info">Solver: <b>' + esc(data.solver) + '</b> · expected fit '
 					+ summary.expected_fit + '/100 · baseline ' + summary.baseline_fit
@@ -68,10 +73,59 @@
 					+ (rows ? '<table class="table table-condensed table-striped"><thead><tr><th>Task</th><th>Now</th><th>Suggested</th><th>Fit</th><th>Hours</th><th></th></tr></thead><tbody>'
 						+ rows + '</tbody></table>' : '<p>No assignments found.</p>')
 					+ (loads ? '<p>' + loads + '</p>' : '')
-					+ '<p class="text-muted">Preview only. Change owners from the task board after reviewing the recommendations.</p>';
+					+ '<p class="text-muted">Review the recommendations before applying them. Every change is recorded in the issue history.</p>';
+
+				if (applyButton) {
+					var canApply = button.getAttribute('data-can-apply') === '1';
+					var hasChanges = Number(summary.changed || 0) > 0;
+					applyButton.style.display = canApply && hasChanges ? '' : 'none';
+				}
 			})
 			.catch(function () {
 				body.innerHTML = '<div class="alert alert-warning">The optimizer is unavailable. Try again shortly.</div>';
 			});
 	});
+
+	if (applyButton) {
+		applyButton.addEventListener('click', function () {
+			if (!lastAssignments.length) { return; }
+
+			applyButton.disabled = true;
+			var csrf = document.querySelector('meta[name="csrf-token"]');
+			var params = new URLSearchParams();
+			params.set('csrf-token', csrf ? csrf.getAttribute('content') : '');
+			params.set('sprint_id', button.getAttribute('data-sprint'));
+			params.set('assignments', JSON.stringify(lastAssignments.map(function (assignment) {
+				return {
+					issue_id: assignment.issue_id,
+					user_id: assignment.user_id,
+					score: assignment.score,
+					hours: assignment.hours
+				};
+			})));
+
+			fetch(button.getAttribute('data-base') + '/intelligence/optimize/apply', {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+					'X-Requested-With': 'XMLHttpRequest'
+				},
+				body: params.toString()
+			})
+				.then(function (response) { return response.json(); })
+				.then(function (data) {
+					if (data.error) {
+						body.insertAdjacentHTML('afterbegin', '<div class="alert alert-warning">' + esc(data.error) + '</div>');
+						applyButton.disabled = false;
+						return;
+					}
+					window.location.reload();
+				})
+				.catch(function () {
+					body.insertAdjacentHTML('afterbegin', '<div class="alert alert-warning">Could not apply the assignments.</div>');
+					applyButton.disabled = false;
+				});
+		});
+	}
 })();

@@ -24,6 +24,17 @@ def test_cycle_prediction(client):
     assert body["sample_size"] > 0
 
 
+def test_batch_risk(client):
+    response = client.post("/v1/predict/risk/batch", json={"issue_ids": [1001, 1002]})
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert len(results) == 2
+    for result in results:
+        assert result["error"] is None
+        assert 0 <= result["p_late"] <= 1
+        assert result["risk"] in {"low", "medium", "high"}
+
+
 def test_unknown_issue_is_404(client):
     response = client.post("/v1/predict/risk", json={"issue_id": 999999})
     assert response.status_code == 404

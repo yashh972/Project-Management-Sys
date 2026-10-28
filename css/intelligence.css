@@ -33,6 +33,34 @@
     margin-bottom: 0.35rem;
 }
 
+.card.task .risk-badge {
+    float: right;
+    margin-left: 0.35rem;
+    padding: 1px 6px;
+    border-radius: 9px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.6;
+}
+
+.issue-list .risk-badge {
+    margin-left: 0.35rem;
+    padding: 1px 5px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
 #forecast-modal .modal-body {
     min-height: 120px;
+}
+
+.forecast-whatif {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.forecast-whatif .btn {
+    margin: 0 0.15rem;
 }
